@@ -32,9 +32,9 @@ int main(void)
         float course_grade;
 
         // Ask the user for the units and their grade in a course.
-        printf("Enter course units: ");
+        printf("[%i] Enter course units: ", i + 1);
         scanf("%d", &course_units);
-        printf("Enter grade: ");
+        printf("[%i] Enter grade: ", i + 1);
         scanf("%f", &course_grade);
 
         // Add the units of this course to the total number of units
