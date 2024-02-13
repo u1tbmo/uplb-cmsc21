@@ -7,7 +7,7 @@
 // Function prototypes
 char *bmi_category(float bmi);
 
-int main()
+int main(void)
 {
     // Initialize variables
     int choice = 0;
