@@ -51,4 +51,6 @@ int main(void)
     printf("\n");
     printf("GWA: %.2f\n", gwa);
     printf("Total units: %d\n", total_units);
+
+    return 0;
 }
