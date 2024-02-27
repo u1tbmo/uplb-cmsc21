@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-// Recursive Exponentiation Function taking a Base and a Power
+// Recursive exponentiation Function taking a base and a power
 float expo(float base, int power)
 {
     // Base Cases
