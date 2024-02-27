@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 // Function Prototype
-float calculate_growth(float population, int years, float growth_rate);
+float calculate_growth(float current_population, int remaining_years, float annual_growth_rate);
 
 int main()
 {
