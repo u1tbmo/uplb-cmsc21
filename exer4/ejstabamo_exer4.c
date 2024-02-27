@@ -14,7 +14,7 @@ int main()
     scanf("%d", &population);
     if (population <= 0)
     {
-        printf("Error 1: Population is must at least be 1.\n");
+        printf("Error 1: Population must at least be 1.\n");
         return 1;
     }
 
