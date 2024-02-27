@@ -51,6 +51,6 @@ float calculate_growth(float current_population, int remaining_years, float annu
     }
 
     // Recursive Case
-    // If remaining_years > 1, calculate the current_population growth, and decrement remaining_years.
+    // If remaining_years > 0, calculate the current_population growth, and decrement remaining_years.
     return calculate_growth(current_population + (current_population * annual_growth_rate), remaining_years - 1, annual_growth_rate);
 }
