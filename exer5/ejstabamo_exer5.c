@@ -37,5 +37,5 @@ int main()
     printf("nptr3 points to the address of nptr2 which points to the address of num2 which contains %d\n", **nptr3);
 
     //10. Display via printf the value of nptr3 and the address of nptr2
-    printf("nptr3 points to this address %p\nnptr2 has the memory address %p\n", *nptr3, nptr2);
+    printf("nptr3 points to this address %p\nnptr2 has the memory address %p\n", nptr3, &nptr2);
 }
