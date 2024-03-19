@@ -185,6 +185,13 @@ void array_element_factors(int *array, int array_size, int index)
     // If it is, print it.
     for (int i = 0; i < array_size; i++)
     {
+        // ! NOTE: Unknown intended behavior
+        // ! It is currently unclear from the sample run if the
+        // ! condition for skipping is if the index is equal to i
+        // ! or if the value at index has the same value at i
+        // ! This condition only skips checking for itself.
+        // ! Duplicates of an element will be checked since it is a
+        // ! separate element at a separate index.
         if (index == i)
         {
             continue;
