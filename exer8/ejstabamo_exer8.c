@@ -22,7 +22,7 @@ int main()
 {
     // Variables
     char *name, **crushes;
-    int crush_qty, running = 1, initialized = 0;
+    int crush_qty, running = 1, initialized = 0, input_buffer;
 
     // Ask the user for a name
     printf("Enter your name: ");
@@ -33,7 +33,12 @@ int main()
     {
         printf("Enter the number of crushes you have: ");
         scanf("%d", &crush_qty);
-        getchar();
+
+        // Clear the input buffer
+        while ((input_buffer = getchar()) != '\n' && input_buffer != EOF)
+        {
+        };
+
         if (crush_qty <= 0)
         {
             printf("Error: You must have at least one crush to play FLAMES.\n\n");
@@ -89,8 +94,7 @@ int main()
 int menu()
 {
     // Variables
-    int choice;
-    char input_buffer;
+    int choice, input_buffer;
 
     // Menu
     printf("+-------------------------------------------------------------------------+\n");
