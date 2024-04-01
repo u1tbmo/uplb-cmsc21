@@ -7,14 +7,15 @@
 #include <string.h>
 #include <ctype.h>
 
+// Global Constant
 const int MAX_LEN_NAME = 51;
 
 int menu();                                            // Prints a menu and returns an int of the user's choice
 char *get_string();                                    // Gets a string from the user
 char **crushes_input(char **array, int qty, int init); // Allows the user to add `qty` names of crushes to the `array`
 int remaining_chars(char *name1, char *name2);         // Counts the number of characters that are not common between the two strings
-void all_flames(char *name, char **array, int qty);    // Prints all FLAMES results
 void flames(int char_count);                           // Prints the result of FLAMES using the total character count.
+void all_flames(char *name, char **array, int qty);    // Prints all FLAMES results
 void free_str_array(char **array, int qty);            // Frees all memory inside an array of strings
 
 int main()
@@ -79,6 +80,7 @@ int main()
     if (initialized)
     {
         // Only free the contents of the array and the array itself if it has been initialized
+        // Prevents segmentation fault
         free_str_array(crushes, crush_qty);
         free(crushes);
     }
@@ -252,7 +254,7 @@ void flames(int char_count)
         i = 0, j = 1;
         while (j < char_count || FLAMES[1][i] == '0') // Count up to char_count, also make sure that i is not pointing to a removed letter
         {
-            if (FLAMES[1][i] == '0')
+            if (FLAMES[1][i] == '0') // If i is pointing to a removed letter, iterate again but do not increment j
             {
                 i++;
                 i %= 6;
