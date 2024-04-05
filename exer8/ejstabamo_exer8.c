@@ -188,8 +188,8 @@ int remaining_chars(char *name1, char *name2)
 {
     // Variables
     int count, common_chars = 0, i, j;
-    char *first = (char *)malloc(sizeof(char) * (strlen(name1) + 1));
-    char *second = (char *)malloc(sizeof(char) * (strlen(name2) + 1));
+    char *first = (char *)malloc(sizeof(char) * (strlen(name1) + 1));  // Allocate memory holding name1
+    char *second = (char *)malloc(sizeof(char) * (strlen(name2) + 1)); // Allocate memory holding name2
 
     // Copy only alphabetical letters to the temporary variables, turning them lowercase
     for (i = 0, j = 0; name1[j] != '\0'; j++)
@@ -199,7 +199,7 @@ int remaining_chars(char *name1, char *name2)
             first[i++] = tolower(name1[j]);
         }
     }
-    first[i] = '\0';
+    first[i] = '\0'; // Terminate the string
     for (i = 0, j = 0; name2[j] != '\0'; j++)
     {
         if (isalpha(name2[j]))
@@ -207,14 +207,14 @@ int remaining_chars(char *name1, char *name2)
             second[i++] = tolower(name2[j]);
         }
     }
-    second[i] = '\0';
+    second[i] = '\0'; // Terminate the string
 
-    // Iterate through the strings, setting pairs to '-' and updating common chars
+    // Iterate through both strings
     for (i = 0; first[i] != '\0'; i++)
     {
         for (j = 0; second[j] != '\0'; j++)
         {
-            if (first[i] == second[j])
+            if (first[i] == second[j]) // When we encounter a pair, set them to '-' and add to the common_chars counter
             {
                 first[i] = '-';
                 second[j] = '-';
@@ -236,10 +236,10 @@ int remaining_chars(char *name1, char *name2)
 
 void flames(int char_count)
 {
-    // In cases where a person has the exact same name as the crush, print a special message.
+    // In cases where a person has the exact same name as the crush (or no characters remain), print "Unknown".
     if (char_count == 0)
     {
-        printf("FLAMES Result: Very Special!\n");
+        printf("FLAMES Result: Unknown\n");
         return;
     }
 
