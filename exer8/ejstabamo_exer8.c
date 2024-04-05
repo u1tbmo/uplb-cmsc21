@@ -10,6 +10,7 @@
 // Global Constant
 const int MAX_LEN_NAME = 51;
 
+// Function Prototypes
 int menu();                                            // Prints a menu and returns an int of the user's choice
 char *get_string();                                    // Gets a string from the user
 char **crushes_input(char **array, int qty, int init); // Allows the user to add `qty` names of crushes to the `array`
