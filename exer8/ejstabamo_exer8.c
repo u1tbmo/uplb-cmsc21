@@ -256,19 +256,21 @@ void flames(int char_count)
     // While there is still more than 1 letter in FLAMES
     while (letters > 1)
     {
-        i = 0, j = 1;
-        while (j < char_count || FLAMES[1][i] == '0') // Count up to char_count, also make sure that i is not pointing to a removed letter
+        // Iterate char_count times through FLAMES, wrapping around if needed
+        for (i = 0, j = 1; j < char_count; i = (i + 1) % 6)
         {
-            if (FLAMES[1][i] == '0') // If i is pointing to a removed letter, iterate again but do not increment j
+            // We only count movement if the letter has not yet been removed
+            if (FLAMES[1][i] != '0')
             {
-                i++;
-                i %= 6;
-                continue;
+                j++;
             }
-            i++;
-            i %= 6;
-            j++;
         }
+        // Make sure that we are currently not pointing at a removed letter.
+        while (FLAMES[1][i] == '0')
+        {
+            i = (i + 1) % 6;
+        }
+
         FLAMES[1][i] = '0'; // Remove the letter as a candidate
         letters--;          // Update the number of candidates left
     }
