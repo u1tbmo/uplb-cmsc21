@@ -237,15 +237,15 @@ int remaining_chars(char *name1, char *name2)
 
 void flames(int char_count)
 {
-    // In cases where a person has the exact same name as the crush (or no characters remain), print "Unknown".
+    // In the case where the two people have no characters remaining (most likely having the same name)
     if (char_count == 0)
     {
-        printf("FLAMES Result: Unknown\n");
+        printf("FLAMES Result: Specially Yours!\n"); // Just to have some fun
         return;
     }
 
     // Variables
-    int letters = 6, i, j;
+    int letters = 6, moves, i, j;
 
     // FLAMES is a 2D array that contains the array of chars of FLAMES and an array of '1's
     // This will be the way to find "remove" characters from FLAMES.
@@ -256,23 +256,29 @@ void flames(int char_count)
     // While there is still more than 1 letter in FLAMES
     while (letters > 1)
     {
-        // Iterate char_count times through FLAMES, wrapping around if needed
-        for (i = 0, j = 1; j < char_count; i = (i + 1) % 6)
+        // Optimization to reduce number of iterations
+        moves = char_count % letters;
+        if (moves == 0)
         {
-            // We only count movement if the letter has not yet been removed
-            if (FLAMES[1][i] != '0')
-            {
-                j++;
-            }
-        }
-        // Make sure that we are currently not pointing at a removed letter.
-        while (FLAMES[1][i] == '0')
-        {
-            i = (i + 1) % 6;
+            moves = letters;
         }
 
-        FLAMES[1][i] = '0'; // Remove the letter as a candidate
-        letters--;          // Update the number of candidates left
+        // `i` pertains to the number of moves to make, `j` pertains to the index that will be removed
+        i = 0, j = -1; // Start at `j = -1` since we have not yet made moves (i = 0)
+        while (i < moves)
+        {
+            // Move to the next character that is not removed
+            do
+            {
+                j = (j + 1) % 6;
+            } while (FLAMES[1][j] == '0');
+
+            i++; // Count the movement
+        }
+
+        // Once we finish moving to the index that will be removed, mark the letter as removed and decrement `letters`
+        FLAMES[1][j] = '0';
+        letters--;
     }
 
     // Find the remaining letter and print the result
