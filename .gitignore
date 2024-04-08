@@ -1,7 +1,3 @@
-# Personal
-
-_random/
-*.cast
 
 # Ignore all
 *
@@ -11,6 +7,11 @@ _random/
 
 # Unignore all dirs
 !*/
+
+# Personal
+
+_random/
+*.cast
 
 # Created by https://www.toptal.com/developers/gitignore/api/c
 # Edit at https://www.toptal.com/developers/gitignore?templates=c
