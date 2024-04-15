@@ -20,6 +20,12 @@ int main()
     init_matrix(matrix, rows, cols);
     printf("\n-- Matrix --\n");
     print_matrix(matrix, rows, cols);
+
+    for (int i = 0; i < rows; i++)
+    {
+        free(matrix[i]);
+    }
+    free(matrix);
 }
 
 int *create_int_array(int size)
