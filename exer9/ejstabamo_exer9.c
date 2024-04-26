@@ -164,14 +164,14 @@ char *get_string()
     char *temp = (char *)malloc(STR_MAX_LENGTH * sizeof(char));
     if (temp == NULL) // If malloc failed
     {
-        printf("Error: Memory allocation failed.\n");
+        printf("Error: Memory allocation failed.\n\n");
         return NULL;
     }
 
     // Read a max of 50 characters.
     if (fgets(temp, STR_MAX_LENGTH, stdin) == NULL) // If fgets failed
     {
-        printf("Error: Unable to read input.\n");
+        printf("Error: Unable to read input.\n\n");
         free(temp);
         return NULL;
     }
@@ -216,7 +216,7 @@ void add_event(Event *e_array, int *e_count)
 
     if (*e_count == MAX_EVENTS)
     {
-        printf("Error: Reached maximum number of events.\n");
+        printf("Error: Reached maximum number of events.\n\n");
         return;
     }
 
@@ -228,11 +228,12 @@ void add_event(Event *e_array, int *e_count)
         clear_buffer();
         if (event_id <= 0)
         {
-            printf("Error: Invalid Event ID.\n");
+            printf("Error: Invalid Event ID.\n\n");
         }
         if (event_exists(e_array, *e_count, event_id) != -1)
         {
-            printf("Error: Event ID already exists in database.\n");
+            printf("Error: Event ID already exists in database.\n\n");
+            return;
         }
     } while (event_exists(e_array, *e_count, event_id) != -1 || event_id <= 0);
     e_array[*e_count].event_id = event_id;
@@ -308,7 +309,7 @@ void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
             if (*c_count == MAX_CUSTOMERS)
             {
                 free(temp);
-                printf("Error: Reached maximum number of customers.\n");
+                printf("Error: Reached maximum number of customers.\n\n");
                 return;
             }
             add_customer(c_array, c_count, temp);
@@ -317,7 +318,7 @@ void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
 
     if (c_array[c_index].tickets_bought == MAX_TICKETS_PER_CUSTOMER)
     {
-        printf("Error: Customer has bought the maximum number of tickets.\n");
+        printf("Error: Customer has bought the maximum number of tickets.\n\n");
         return;
     }
 
@@ -336,11 +337,13 @@ void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
         }
         else if ((e_index = event_exists(e_array, e_count, event_id)) == -1)
         {
-            printf("Error: Event with ID %d does not exist.\n", event_id);
+            printf("Error: Event with ID %d does not exist.\n\n", event_id);
+            return;
         }
         else if (e_array[e_index].stock == 0)
         {
-            printf("Error: Tickets are out of stock.\n");
+            printf("Error: Tickets are out of stock.\n\n");
+            return;
         }
     } while (event_id <= 0 || e_index == -1);
     printf("\n");
@@ -376,7 +379,8 @@ void edit_event(Event *e_array, int e_count)
         }
         else if ((e_index = event_exists(e_array, e_count, event_id)) == -1)
         {
-            printf("Error: Event with ID %d does not exist.\n", event_id);
+            printf("Error: Event with ID %d does not exist.\n\n", event_id);
+            return;
         }
     } while (event_id <= 0 || e_index == -1);
     printf("\n");
@@ -606,7 +610,7 @@ void view_customers(Customer *c_array, int c_count)
         printf("Tickets Bought: \n");
         for (int j = 0; j < c_array[i].tickets_bought; j++)
         {
-            printf("+ [%d] %s @ %s\n",
+            printf("- %d | %s @ %s\n",
                    c_array[i].tickets[j].event_id,
                    c_array[i].tickets[j].event_title,
                    c_array[i].tickets[j].date_and_time);
