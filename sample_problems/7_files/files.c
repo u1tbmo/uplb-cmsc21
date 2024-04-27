@@ -125,6 +125,8 @@ int menu()
 void load_data(char *load_file, student_record *records, int *count)
 {
     FILE *fptr;
+    char *temp;
+
     do
     {
         fptr = fopen(load_file, "r");
