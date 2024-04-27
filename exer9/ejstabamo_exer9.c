@@ -26,62 +26,81 @@ typedef struct Event
     int stock;                          // the number of tickers remaining
 } Event;
 
-typedef struct Ticket // this is a new struct that is a subset of Event
+typedef struct Ticket // Ticket is a subset of Event
 {
-    int event_id;                       // the ticket's event Id
-    char event_title[STR_MAX_LENGTH];   // the ticket's event title
-    char date_and_time[STR_MAX_LENGTH]; // the ticket's date and time
+    int event_id;                       // the Ticket's event Id
+    char event_title[STR_MAX_LENGTH];   // the Ticket's event title
+    char date_and_time[STR_MAX_LENGTH]; // the Ticket's date and time
+    float ticket_price;                 // the Ticket's price
 } Ticket;
 
 typedef struct Customer
 {
-    char name[STR_MAX_LENGTH];
-    int tickets_bought;
-    Ticket tickets[MAX_TICKETS_PER_CUSTOMER]; // we use the Ticket data structure instead of Event since we do not need to preserve all data
-    float total_cost;
+    char name[STR_MAX_LENGTH];                // the name of the Customer
+    int tickets_bought;                       // the number of Tickets bought by the Customer
+    Ticket tickets[MAX_TICKETS_PER_CUSTOMER]; // the Tickets bought by the Customer
+    float total_cost;                         // the total cost of all Tickets
 
 } Customer;
 
-// Function Prototypes
-int menu();                                                                    // prints the menu and returns the choice of the user
-char *get_string();                                                            // gets a string from the user
-void clear_buffer();                                                           // clears the input buffer
-void add_event(Event *e_array, int *e_count);                                  // adds an Event to the array
-void edit_event(Event *e_array, int e_count);                                  // edits an Event
-void delete_event(Event *e_array, int *e_count);                               // deletes an Event
-void view_events(Event *e_array, int e_count);                                 // views all events
-void view_events_l(Event *e_array, int e_count);                               // views all events in linear format
-void save_events(char *e_file, Event *e_array, int e_count);                   // saves all events
-void load_events(char *e_file, Event *e_array, int *e_count);                  // loads all events
-void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count); // buys a ticket for a Customer
-void add_customer(Customer *c_array, int *c_count, char *c_name);              // adds a Customer to the array
-void view_customers(Customer *c_array, int c_count);                           // views all customers
-void save_customers(char *c_file, Customer *c_array, int c_count);             // saves all customers
-void load_customers(char *c_file, Customer *c_array, int *c_count);            // loads all customers
-int event_exists(Event *e_array, int e_count, int event_id);                   // checks whether the Event identifier of `e` already exists in the database
-int customer_exists(Customer *c_array, int c_count, char *c_name);             // checks whether a Customer exists in the database, returns index
-int events_in_stock(Event *e_array, int e_count);                              // checks if there is at least one Event with one stock
+// Utility functions
+int menu();                                                        // prints the menu and returns the choice of the user
+char *get_string();                                                // gets a string from the user
+void clear_buffer();                                               // clears the input buffer
+int events_in_stock(Event *e_array, int e_count);                  // checks if all events have at least 1 stock
+int event_exists(Event *e_array, int e_count, int event_id);       // checks whether the Event already exists in the database
+int customer_exists(Customer *c_array, int c_count, char *c_name); // checks whether a Customer exists in the database, returns index
+int ticket_exists(Ticket *t_array, int t_count, int event_id);     // checks whether the Ticket already exists in the database
+void initialize_events(Event *e_array);                            // initializes the Event array to default values
+void initialize_customers(Customer *c_array);                      // initializes the Customer array to default values
 
+// Event functions
+void add_event(Event *e_array, int *e_count);                                     // adds an Event to the array
+void edit_event(Event *e_array, int e_count, Customer *c_array, int c_count);     // edits an Event
+void delete_event(Event *e_array, int *e_count, Customer *c_array, int *c_count); // deletes an Event
+void view_events(Event *e_array, int e_count);                                    // views all Events
+void view_events_l(Event *e_array, int e_count);                                  // views all Events in linear format
+void save_events(char *e_file, Event *e_array, int e_count);                      // saves all Events
+void load_events(char *e_file, Event *e_array, int *e_count);                     // loads all Events
+
+// Customer functions
+void add_customer(Customer *c_array, int *c_count, char *c_name);   // adds a Customer to the array
+void view_customers(Customer *c_array, int c_count);                // views all Customers
+void save_customers(char *c_file, Customer *c_array, int c_count);  // saves all Customers
+void load_customers(char *c_file, Customer *c_array, int *c_count); // loads all Customers
+void delete_empty_customers(Customer *c_array, int *c_count);       // deletes Customers with 0 tickets bought
+
+// Ticket function
+void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count); // buys a Ticket for a Customer
+
+// Main Function
 int main()
 {
-    int e_count = 0, c_count = 0, running = 1;
+    // Initialize event and customer counts, and the user's meny choice
+    int e_count = 0, c_count = 0, choice;
 
-    // Arrays
+    // Allocate memory for the customer and event arrays
     Customer *c_array = (Customer *)malloc(sizeof(Customer) * MAX_CUSTOMERS);
     Event *e_array = (Event *)malloc(sizeof(Event) * MAX_EVENTS);
 
-    // Load
+    // Initialize events and customers to default values
+    initialize_events(e_array);
+    initialize_customers(c_array);
+
+    // Load events and customers from files
     load_events(EVENTS_FILE, e_array, &e_count);
     load_customers(CUSTOMERS_FILE, c_array, &c_count);
 
-    while (running)
+    // Main program loop
+    do
     {
-        switch (menu())
+        choice = menu(); // Display meny and get user's choice
+        switch (choice)
         {
-        case 1:
+        case 1: // Add a new event
             add_event(e_array, &e_count);
             break;
-        case 2:
+        case 2: // Buy a ticket, if there are any events
             if (e_count == 0)
             {
                 printf("Error: No events.\n\n");
@@ -89,23 +108,23 @@ int main()
             }
             buy_ticket(e_array, e_count, c_array, &c_count);
             break;
-        case 3:
+        case 3: // Edit an event, if there are any events
             if (e_count == 0)
             {
                 printf("Error: No events.\n\n");
                 break;
             }
-            edit_event(e_array, e_count);
+            edit_event(e_array, e_count, c_array, c_count);
             break;
-        case 4:
+        case 4: // Delete an event, if there are any events
             if (e_count == 0)
             {
                 printf("Error: No events.\n\n");
                 break;
             }
-            delete_event(e_array, &e_count);
+            delete_event(e_array, &e_count, c_array, &c_count);
             break;
-        case 5:
+        case 5: // View all events, if there are any events
             if (e_count == 0)
             {
                 printf("Error: No events.\n\n");
@@ -113,7 +132,7 @@ int main()
             }
             view_events(e_array, e_count);
             break;
-        case 6:
+        case 6: // View all customers, if there are any customers
             if (c_count == 0)
             {
                 printf("Error: No customers.\n\n");
@@ -121,18 +140,18 @@ int main()
             }
             view_customers(c_array, c_count);
             break;
-        case 0:
+        case 0: // Exit the program
             printf("Goodbye!\n");
-            running = !running;
             break;
-        default:
+        default: // Handle invalid choices
             printf("Error: Invalid choice.\n\n");
             break;
         }
-        // Save
+        delete_empty_customers(c_array, &c_count); // Delete any Customers with 0 tickets
+        // Save events and customers to files
         save_events(EVENTS_FILE, e_array, e_count);
         save_customers(CUSTOMERS_FILE, c_array, c_count);
-    }
+    } while (choice != 0);
 
     // Free allocated memory
     free(c_array);
@@ -207,6 +226,60 @@ int event_exists(Event *e_array, int e_count, int event_id)
         }
     }
     return -1;
+}
+
+int customer_exists(Customer *c_array, int c_count, char *c_name)
+{
+    for (int i = 0; i < c_count; i++)
+    {
+        if (strcmp(c_name, c_array[i].name) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int ticket_exists(Ticket *t_array, int t_count, int event_id)
+{
+    for (int i = 0; i < t_count; i++)
+    {
+        if (event_id == t_array[i].event_id)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void initialize_events(Event *e_array)
+{
+    for (int i = 0; i < MAX_EVENTS; i++)
+    {
+        e_array[i].event_id = 0;
+        strcpy(e_array[i].event_title, "\0");
+        strcpy(e_array[i].artist, "\0");
+        strcpy(e_array[i].date_and_time, "\0");
+        e_array[i].ticket_price = 0;
+        e_array[i].stock = 0;
+    }
+}
+
+void initialize_customers(Customer *c_array)
+{
+    for (int i = 0; i < MAX_CUSTOMERS; i++)
+    {
+        strcpy(c_array[i].name, "\0");
+        c_array[i].tickets_bought = 0;
+        c_array[i].total_cost = 0;
+        for (int j = 0; j < MAX_TICKETS_PER_CUSTOMER; j++)
+        {
+            c_array[i].tickets[j].event_id = 0;
+            strcpy(c_array[i].tickets[j].event_title, "\0");
+            strcpy(c_array[i].tickets[j].date_and_time, "\0");
+            c_array[i].tickets[j].ticket_price = 0;
+        }
+    }
 }
 
 void add_event(Event *e_array, int *e_count)
@@ -284,82 +357,12 @@ void add_event(Event *e_array, int *e_count)
 
     // Increment Count
     (*e_count)++;
+
+    // Print message
+    printf("Success: Added event!\n\n");
 }
 
-void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
-{
-    char *temp;
-    int c_index, e_index, event_id;
-
-    if (!events_in_stock(e_array, e_count))
-    {
-        view_events_l(e_array, e_count);
-        printf("Error: All events are out of stock.\n\n");
-        return;
-    }
-
-    // Ask for a name
-    printf("Enter Customer Name: ");
-    temp = get_string();
-
-    do
-    {
-        if ((c_index = customer_exists(c_array, *c_count, temp)) == -1)
-        {
-            if (*c_count == MAX_CUSTOMERS)
-            {
-                free(temp);
-                printf("Error: Reached maximum number of customers.\n\n");
-                return;
-            }
-            add_customer(c_array, c_count, temp);
-        }
-    } while (c_index == -1);
-
-    if (c_array[c_index].tickets_bought == MAX_TICKETS_PER_CUSTOMER)
-    {
-        printf("Error: Customer has bought the maximum number of tickets.\n\n");
-        return;
-    }
-
-    // Print events
-    view_events_l(e_array, e_count);
-
-    // Ask for an Event id
-    do
-    {
-        printf("Event ID: ");
-        scanf("%d", &event_id);
-        clear_buffer();
-        if (event_id <= 0)
-        {
-            printf("Error: Invalid Event ID.\n");
-        }
-        else if ((e_index = event_exists(e_array, e_count, event_id)) == -1)
-        {
-            printf("Error: Event with ID %d does not exist.\n\n", event_id);
-            return;
-        }
-        else if (e_array[e_index].stock == 0)
-        {
-            printf("Error: Tickets are out of stock.\n\n");
-            return;
-        }
-    } while (event_id <= 0 || e_index == -1);
-    printf("\n");
-
-    // Add the Event to the Customer's tickets array
-    c_array[c_index].tickets[c_array[c_index].tickets_bought].event_id = e_array[e_index].event_id;
-    strcpy(c_array[c_index].tickets[c_array[c_index].tickets_bought].event_title, e_array[e_index].event_title);
-    strcpy(c_array[c_index].tickets[c_array[c_index].tickets_bought].date_and_time, e_array[e_index].date_and_time);
-    c_array[c_index].total_cost += e_array[e_index].ticket_price;
-    c_array[c_index].tickets_bought++;
-    e_array[e_index].stock--;
-
-    free(temp);
-}
-
-void edit_event(Event *e_array, int e_count)
+void edit_event(Event *e_array, int e_count, Customer *c_array, int c_count)
 {
     int event_id, e_index, stock;
     float ticket_price;
@@ -392,6 +395,16 @@ void edit_event(Event *e_array, int e_count)
     printf("Enter new Date and Time: ");
     temp = get_string();
     strcpy(e_array[e_index].date_and_time, temp);
+    // for (int i = 0; i < c_count; i++) // Edit the date and time of all Tickets with the same event ID
+    // {
+    //     for (int j = 0; j < c_array[i].tickets_bought; j++)
+    //     {
+    //         if (c_array[i].tickets[j].event_id == e_array[e_index].event_id)
+    //         {
+    //             strcpy(c_array[i].tickets[j].date_and_time, temp);
+    //         }
+    //     }
+    // }
     free(temp);
 
     // Ticket Price
@@ -417,9 +430,11 @@ void edit_event(Event *e_array, int e_count)
         }
     } while (stock < 0);
     e_array[e_index].stock = stock;
+
+    printf("Success: Edited event!\n\n");
 }
 
-void delete_event(Event *e_array, int *e_count)
+void delete_event(Event *e_array, int *e_count, Customer *c_array, int *c_count)
 {
     // Print events
     view_events_l(e_array, *e_count);
@@ -446,9 +461,33 @@ void delete_event(Event *e_array, int *e_count)
             e_array[j] = e_array[j + 1];
         }
         (*e_count)--;
-        return;
     }
-    printf("Error: Event with ID %d does not exist.\n\n", event_id);
+    else
+    {
+        printf("Error: Event with ID %d does not exist.\n\n", event_id);
+    }
+
+    for (int h = 0; h < *c_count; h++)
+    {
+        for (int k = 0; k < c_array[h].tickets_bought;)
+        {
+            if ((i = ticket_exists(c_array[h].tickets, c_array[h].tickets_bought, event_id)) != -1)
+            {
+                printf("Success: Deleted Ticket %d from Customer %s\n", event_id, c_array[h].name);
+                c_array[h].total_cost -= c_array[h].tickets[i].ticket_price; // Deduct from total cost
+                for (int l = i; l < c_array[h].tickets_bought - 1; l++)
+                {
+                    c_array[h].tickets[l] = c_array[h].tickets[l + 1]; // Shift tickets to the left, essentially deleting the ticket
+                }
+                c_array[h].tickets_bought--;
+            }
+            else
+            {
+                k++;
+            }
+        }
+    }
+    printf("\n");
 }
 
 void view_events(Event *e_array, int e_count)
@@ -468,7 +507,7 @@ void view_events(Event *e_array, int e_count)
 
 void view_events_l(Event *e_array, int e_count)
 {
-    printf("\n---- EVENTS AVAILABLE ----\n");
+    printf("\n--------- EVENTS ---------\n");
     for (int i = 0; i < e_count; i++)
     {
         printf("[%d] %s (%s) - %.2f | %d in stock\n",
@@ -507,6 +546,7 @@ void load_events(char *e_file, Event *e_array, int *e_count)
     FILE *fp = fopen(e_file, "r");
     if (fp == NULL)
     {
+        printf("events.txt not found!\nCreating events.txt file...\n");
         fp = fopen(e_file, "w");
         fclose(fp);
         return; // since there is nothing to read
@@ -573,17 +613,6 @@ void load_events(char *e_file, Event *e_array, int *e_count)
     fclose(fp);
 }
 
-int customer_exists(Customer *c_array, int c_count, char *c_name)
-{
-    for (int i = 0; i < c_count; i++)
-    {
-        if (strcmp(c_name, c_array[i].name) == 0)
-        {
-            return i;
-        }
-    }
-    return -1;
-}
 void add_customer(Customer *c_array, int *c_count, char *c_name)
 {
     // Copy the name to the Customer name field
@@ -610,10 +639,11 @@ void view_customers(Customer *c_array, int c_count)
         printf("Tickets Bought: \n");
         for (int j = 0; j < c_array[i].tickets_bought; j++)
         {
-            printf("- %d | %s @ %s\n",
+            printf("- %d | %s at %s | Bought for P%.2f\n",
                    c_array[i].tickets[j].event_id,
                    c_array[i].tickets[j].event_title,
-                   c_array[i].tickets[j].date_and_time);
+                   c_array[i].tickets[j].date_and_time,
+                   c_array[i].tickets[j].ticket_price);
         }
         printf("Total Cost: %.2f\n", c_array[i].total_cost);
     }
@@ -633,10 +663,11 @@ void save_customers(char *c_file, Customer *c_array, int c_count)
         fprintf(fp, "%d\n", c_array[i].tickets_bought);
         for (int j = 0; j < c_array[i].tickets_bought; j++)
         {
-            fprintf(fp, "%d\t%s\t%s\n",
+            fprintf(fp, "%d\t%s\t%s\t%.2f\n",
                     c_array[i].tickets[j].event_id,
                     c_array[i].tickets[j].event_title,
-                    c_array[i].tickets[j].date_and_time);
+                    c_array[i].tickets[j].date_and_time,
+                    c_array[i].tickets[j].ticket_price);
         }
         fprintf(fp, "%.2f\n", c_array[i].total_cost);
     }
@@ -649,6 +680,7 @@ void load_customers(char *c_file, Customer *c_array, int *c_count)
     FILE *fp = fopen(c_file, "r");
     if (fp == NULL)
     {
+        printf("customers.txt not found!\nCreating customers.txt file...\n");
         fp = fopen(c_file, "w");
         fclose(fp);
         return; // since there is nothing to read
@@ -689,10 +721,11 @@ void load_customers(char *c_file, Customer *c_array, int *c_count)
                 {
                     fgets(temp, STR_MAX_LENGTH, fp); // ensure we actually read a new line
                 }
-                sscanf(temp, "%d\t%[^\t\n]\t%[^\t\n]",
+                sscanf(temp, "%d\t%[^\t\n]\t%[^\t\n]\t%f",
                        &c_array[i].tickets[j].event_id,
                        c_array[i].tickets[j].event_title,
-                       c_array[i].tickets[j].date_and_time);
+                       c_array[i].tickets[j].date_and_time,
+                       &c_array[i].tickets[j].ticket_price);
             }
             status++;
             break;
@@ -708,6 +741,25 @@ void load_customers(char *c_file, Customer *c_array, int *c_count)
     fclose(fp);
 }
 
+void delete_empty_customers(Customer *c_array, int *c_count)
+{
+    for (int i = 0; i < *c_count;)
+    {
+        if (c_array[i].tickets_bought == 0)
+        {
+            for (int j = i; j < *c_count - 1; j++)
+            {
+                c_array[j] = c_array[j + 1];
+            }
+            (*c_count)--;
+        }
+        else
+        {
+            i++;
+        }
+    }
+}
+
 int events_in_stock(Event *e_array, int e_count)
 {
     for (int i = 0; i < e_count; i++)
@@ -718,4 +770,87 @@ int events_in_stock(Event *e_array, int e_count)
         }
     }
     return 0;
+}
+
+void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
+{
+    char *temp;
+    int c_index, e_index, event_id;
+
+    if (!events_in_stock(e_array, e_count))
+    {
+        view_events_l(e_array, e_count);
+        printf("Error: All events are out of stock.\n\n");
+        return;
+    }
+
+    // Ask for a name
+    printf("Enter Customer Name: ");
+    temp = get_string();
+
+    do
+    {
+        if ((c_index = customer_exists(c_array, *c_count, temp)) == -1)
+        {
+            if (*c_count == MAX_CUSTOMERS)
+            {
+                free(temp);
+                printf("Error: Reached maximum number of customers.\n\n");
+                return;
+            }
+            add_customer(c_array, c_count, temp);
+        }
+    } while (c_index == -1);
+
+    if (c_array[c_index].tickets_bought == MAX_TICKETS_PER_CUSTOMER)
+    {
+        printf("Error: Customer has bought the maximum number of tickets.\n\n");
+        free(temp);
+        return;
+    }
+
+    // Print events
+    view_events_l(e_array, e_count);
+
+    // Ask for an Event id
+    do
+    {
+        printf("Event ID: ");
+        scanf("%d", &event_id);
+        clear_buffer();
+        if (event_id <= 0)
+        {
+            printf("Error: Invalid Event ID.\n");
+        }
+        else if ((e_index = event_exists(e_array, e_count, event_id)) == -1)
+        {
+            printf("Error: Event with ID %d does not exist.\n\n", event_id);
+            free(temp);
+            return;
+        }
+        else if (e_array[e_index].stock == 0)
+        {
+            printf("Error: Tickets are out of stock.\n\n");
+            free(temp);
+            return;
+        }
+    } while (event_id <= 0 || e_index == -1);
+
+    // Add the Event to the Customer's tickets array
+    c_array[c_index].tickets[c_array[c_index].tickets_bought].event_id = e_array[e_index].event_id;
+    strcpy(c_array[c_index].tickets[c_array[c_index].tickets_bought].event_title, e_array[e_index].event_title);
+    strcpy(c_array[c_index].tickets[c_array[c_index].tickets_bought].date_and_time, e_array[e_index].date_and_time);
+    c_array[c_index].tickets[c_array[c_index].tickets_bought].ticket_price = e_array[e_index].ticket_price;
+    c_array[c_index].total_cost += e_array[e_index].ticket_price;
+    c_array[c_index].tickets_bought++;
+    e_array[e_index].stock--;
+
+    // Print message
+    printf("Success: Ticket %d %s %s bought for P%.2f!\n\n",
+           e_array[e_index].event_id,
+           e_array[e_index].event_title,
+           e_array[e_index].date_and_time,
+           e_array[e_index].ticket_price);
+
+    free(temp);
 }
