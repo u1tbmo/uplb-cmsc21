@@ -222,7 +222,7 @@ int event_exists(Event *e_array, int e_count, int event_id)
     {
         if (event_id == e_array[i].event_id)
         {
-            return i;
+            return i; // return the index of the Event
         }
     }
     return -1;
@@ -234,7 +234,7 @@ int customer_exists(Customer *c_array, int c_count, char *c_name)
     {
         if (strcmp(c_name, c_array[i].name) == 0)
         {
-            return i;
+            return i; // return the index of the Customer
         }
     }
     return -1;
@@ -246,7 +246,7 @@ int ticket_exists(Ticket *t_array, int t_count, int event_id)
     {
         if (event_id == t_array[i].event_id)
         {
-            return i;
+            return i; // return the index of the Ticket
         }
     }
     return -1;
@@ -257,9 +257,9 @@ void initialize_events(Event *e_array)
     for (int i = 0; i < MAX_EVENTS; i++)
     {
         e_array[i].event_id = 0;
-        strcpy(e_array[i].event_title, "\0");
-        strcpy(e_array[i].artist, "\0");
-        strcpy(e_array[i].date_and_time, "\0");
+        strcpy(e_array[i].event_title, "");
+        strcpy(e_array[i].artist, "");
+        strcpy(e_array[i].date_and_time, "");
         e_array[i].ticket_price = 0;
         e_array[i].stock = 0;
     }
@@ -269,14 +269,14 @@ void initialize_customers(Customer *c_array)
 {
     for (int i = 0; i < MAX_CUSTOMERS; i++)
     {
-        strcpy(c_array[i].name, "\0");
+        strcpy(c_array[i].name, "");
         c_array[i].tickets_bought = 0;
         c_array[i].total_cost = 0;
         for (int j = 0; j < MAX_TICKETS_PER_CUSTOMER; j++)
         {
             c_array[i].tickets[j].event_id = 0;
-            strcpy(c_array[i].tickets[j].event_title, "\0");
-            strcpy(c_array[i].tickets[j].date_and_time, "\0");
+            strcpy(c_array[i].tickets[j].event_title, "");
+            strcpy(c_array[i].tickets[j].date_and_time, "");
             c_array[i].tickets[j].ticket_price = 0;
         }
     }
