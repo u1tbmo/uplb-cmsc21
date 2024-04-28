@@ -544,7 +544,7 @@ void save_events(char *e_file, Event *e_array, int e_count)
 
     if (e_count == 0)
     {
-        printf("No events were saved.");
+        printf("No events were saved.\n");
         return;
     }
 
