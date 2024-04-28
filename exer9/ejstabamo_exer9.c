@@ -561,7 +561,7 @@ void load_events(char *e_file, Event *e_array, int *e_count)
     FILE *fp = fopen(e_file, "r");
     if (fp == NULL)
     {
-        printf("events.txt not found!\nCreating events.txt file...\n");
+        printf("File events.txt not found!\nCreating events.txt file...\n\n");
         fp = fopen(e_file, "w");
         fclose(fp);
         return; // since there is nothing to read
@@ -697,7 +697,7 @@ void load_customers(char *c_file, Customer *c_array, int *c_count)
     FILE *fp = fopen(c_file, "r");
     if (fp == NULL)
     {
-        printf("customers.txt not found!\nCreating customers.txt file...\n");
+        printf("File customers.txt not found!\nCreating customers.txt file...\n\n");
         fp = fopen(c_file, "w");
         fclose(fp);
         return; // since there is nothing to read
