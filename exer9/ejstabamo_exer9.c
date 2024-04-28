@@ -1,4 +1,4 @@
-/*  Tabamo, Euan Jed S. - ST2L - March 27, 2024
+/*  Tabamo, Euan Jed S. - ST2L - April 23, 2024
     Exercise 9 - Structures and Files
 */
 
@@ -94,8 +94,8 @@ int main()
     // Main program loop
     do
     {
-        choice = menu(); // Display meny and get user's choice
-        switch (choice)
+        // Display meny and get user's choice
+        switch (choice = menu())
         {
         case 1: // Add a new event
             add_event(e_array, &e_count);
@@ -222,7 +222,7 @@ int event_exists(Event *e_array, int e_count, int event_id)
     {
         if (event_id == e_array[i].event_id)
         {
-            return i; // return the index of the Event
+            return i; // return the index of the Event in the array
         }
     }
     return -1;
@@ -234,7 +234,7 @@ int customer_exists(Customer *c_array, int c_count, char *c_name)
     {
         if (strcmp(c_name, c_array[i].name) == 0)
         {
-            return i; // return the index of the Customer
+            return i; // return the index of the Customer in the array
         }
     }
     return -1;
@@ -246,7 +246,7 @@ int ticket_exists(Ticket *t_array, int t_count, int event_id)
     {
         if (event_id == t_array[i].event_id)
         {
-            return i; // return the index of the Ticket
+            return i; // return the index of the Ticket in the array
         }
     }
     return -1;
@@ -254,6 +254,8 @@ int ticket_exists(Ticket *t_array, int t_count, int event_id)
 
 void initialize_events(Event *e_array)
 {
+    // Prevents conditional jump or move errors from valgrind
+    // which occurs when accessing fields that are uninitialized
     for (int i = 0; i < MAX_EVENTS; i++)
     {
         e_array[i].event_id = 0;
@@ -267,6 +269,8 @@ void initialize_events(Event *e_array)
 
 void initialize_customers(Customer *c_array)
 {
+    // Prevents conditional jump or move errors from valgrind
+    // which occurs when accessing fields that are uninitialized
     for (int i = 0; i < MAX_CUSTOMERS; i++)
     {
         strcpy(c_array[i].name, "");
@@ -284,16 +288,19 @@ void initialize_customers(Customer *c_array)
 
 void add_event(Event *e_array, int *e_count)
 {
+    // Variables
     int event_id, stock;
     float ticket_price;
+    char *temp;
 
+    // Don't allow adding more events when we reach the limit
     if (*e_count == MAX_EVENTS)
     {
         printf("Error: Reached maximum number of events.\n\n");
         return;
     }
 
-    // Ask for an Event id
+    // Event ID
     do
     {
         printf("Event ID: ");
@@ -310,8 +317,6 @@ void add_event(Event *e_array, int *e_count)
         }
     } while (event_exists(e_array, *e_count, event_id) != -1 || event_id <= 0);
     e_array[*e_count].event_id = event_id;
-
-    char *temp;
 
     // Event Title
     printf("Event Title: ");
@@ -336,6 +341,7 @@ void add_event(Event *e_array, int *e_count)
     {
         printf("Ticket Price: ");
         scanf("%f", &ticket_price);
+        clear_buffer();
         if (ticket_price < 0)
         {
             printf("Error: Ticket price must be at least 0 (free).\n");
@@ -348,6 +354,7 @@ void add_event(Event *e_array, int *e_count)
     {
         printf("Stock: ");
         scanf("%d", &stock);
+        clear_buffer();
         if (stock < 0)
         {
             printf("Error: Stock must be at least 0.\n");
@@ -364,13 +371,15 @@ void add_event(Event *e_array, int *e_count)
 
 void edit_event(Event *e_array, int e_count, Customer *c_array, int c_count)
 {
+    // Variables
     int event_id, e_index, stock;
     float ticket_price;
+    char *temp;
 
     // Print events
     view_events_l(e_array, e_count);
 
-    // Ask for an Event id
+    // Event ID
     do
     {
         printf("Enter Event ID: ");
@@ -391,10 +400,14 @@ void edit_event(Event *e_array, int e_count, Customer *c_array, int c_count)
     // Ask for new details
 
     // Date and Time
-    char *temp = (char *)malloc(sizeof(char) * STR_MAX_LENGTH);
     printf("Enter new Date and Time: ");
     temp = get_string();
     strcpy(e_array[e_index].date_and_time, temp);
+
+    // ! UNCLEAR SPECIFICATIONS: Should editing the Date and Time of the Event
+    // ! also edit the Date and Time of the Tickets bought by the customers?
+    // ! Opted to not edit the date and time of the customers, since
+    // ! the edit_event() can be used to "re-stock" tickets for a new Date and Time
     // for (int i = 0; i < c_count; i++) // Edit the date and time of all Tickets with the same event ID
     // {
     //     for (int j = 0; j < c_array[i].tickets_bought; j++)
@@ -412,6 +425,7 @@ void edit_event(Event *e_array, int e_count, Customer *c_array, int c_count)
     {
         printf("Enter new Ticket Price: ");
         scanf("%f", &ticket_price);
+        clear_buffer();
         if (ticket_price < 0)
         {
             printf("Error: Ticket price must be at least 0 (free).\n");
@@ -424,22 +438,23 @@ void edit_event(Event *e_array, int e_count, Customer *c_array, int c_count)
     {
         printf("Enter new Stock: ");
         scanf("%d", &stock);
+        clear_buffer();
         if (stock < 0)
         {
             printf("Error: Stock must be at least 0.\n");
         }
     } while (stock < 0);
     e_array[e_index].stock = stock;
-
     printf("Success: Edited event!\n\n");
 }
 
 void delete_event(Event *e_array, int *e_count, Customer *c_array, int *c_count)
 {
+    // Variables
+    int event_id, i;
+
     // Print events
     view_events_l(e_array, *e_count);
-
-    int event_id, i;
 
     // Ask for an Event id
     do
@@ -467,6 +482,8 @@ void delete_event(Event *e_array, int *e_count, Customer *c_array, int *c_count)
         printf("Error: Event with ID %d does not exist.\n\n", event_id);
     }
 
+    // ! UNCLEAR SPECIFICATIONS: Should deleting an event delete tickets from customers?
+    // ! Opted to delete tickets to prevent conflicting event IDs.
     for (int h = 0; h < *c_count; h++)
     {
         for (int k = 0; k < c_array[h].tickets_bought;)
@@ -541,6 +558,7 @@ void save_events(char *e_file, Event *e_array, int e_count)
 
 void load_events(char *e_file, Event *e_array, int *e_count)
 {
+    // Variable
     char temp[STR_MAX_LENGTH];
 
     FILE *fp = fopen(e_file, "r");
@@ -556,14 +574,13 @@ void load_events(char *e_file, Event *e_array, int *e_count)
     fscanf(fp, "%d\n", e_count);
 
     // If *e_count is 0, there is nothing to read.
-    if (e_count == 0)
+    if (*e_count == 0)
     {
         return;
     }
 
-    // 0 for ID, 1 for Title, 2 for Artist, 3 for Date and Time, 4 for Ticket Price, 5 for Stock
     int i = 0;
-    int status = 0;
+    int status = 0; // 0 for ID, 1 for Title, 2 for Artist, 3 for Date and Time, 4 for Ticket Price, 5 for Stock
     while (fgets(temp, STR_MAX_LENGTH, fp) != NULL)
     {
         switch (status)
@@ -630,6 +647,7 @@ void add_customer(Customer *c_array, int *c_count, char *c_name)
 
 void view_customers(Customer *c_array, int c_count)
 {
+    // Variable
     float cost;
 
     for (int i = 0; i < c_count; i++)
@@ -676,7 +694,9 @@ void save_customers(char *c_file, Customer *c_array, int c_count)
 
 void load_customers(char *c_file, Customer *c_array, int *c_count)
 {
+    // Variable
     char temp[STR_MAX_LENGTH];
+
     FILE *fp = fopen(c_file, "r");
     if (fp == NULL)
     {
@@ -689,53 +709,49 @@ void load_customers(char *c_file, Customer *c_array, int *c_count)
     // Read the count
     fscanf(fp, "%d\n", c_count);
 
-    // If *e_count is 0, there is nothing to read.
-    if (c_count == 0)
+    // If *c_count is 0, there is nothing to read.
+    if (*c_count == 0)
     {
         return;
     }
 
-    // 0 for Name, 1 for ticket count, 2 for tickets, 3 for total cost
-    int i = 0;
-    int status = 0;
-    while (fgets(temp, STR_MAX_LENGTH, fp) != NULL)
+    for (int i = 0; i < *c_count; i++)
     {
-        switch (status)
+        for (int status = 0; status < 4; status++)
         {
-        case 0: // NAME
-            if (temp[strlen(temp) - 1] == '\n')
+            fgets(temp, STR_MAX_LENGTH, fp);
+            switch (status)
             {
-                temp[strlen(temp) - 1] = '\0';
-            }
-            strcpy(c_array[i].name, temp);
-            status++;
-            break;
-        case 1: // TICKET COUNT
-            sscanf(temp, "%d", &c_array[i].tickets_bought);
-            status++;
-            break;
-        case 2: // TICKETS
-            for (int j = 0; j < c_array[i].tickets_bought; j++)
-            {
-                if (j != 0)
+            case 0: // NAME
+                if (temp[strlen(temp) - 1] == '\n')
                 {
-                    fgets(temp, STR_MAX_LENGTH, fp); // ensure we actually read a new line
+                    temp[strlen(temp) - 1] = '\0';
                 }
-                sscanf(temp, "%d\t%[^\t\n]\t%[^\t\n]\t%f",
-                       &c_array[i].tickets[j].event_id,
-                       c_array[i].tickets[j].event_title,
-                       c_array[i].tickets[j].date_and_time,
-                       &c_array[i].tickets[j].ticket_price);
+                strcpy(c_array[i].name, temp);
+                break;
+            case 1: // TICKET COUNT
+                sscanf(temp, "%d", &c_array[i].tickets_bought);
+                break;
+            case 2: // TICKETS
+                for (int j = 0; j < c_array[i].tickets_bought; j++)
+                {
+                    if (j != 0)
+                    {
+                        fgets(temp, STR_MAX_LENGTH, fp); // ensure we actually read a new line
+                    }
+                    sscanf(temp, "%d\t%[^\t\n]\t%[^\t\n]\t%f",
+                           &c_array[i].tickets[j].event_id,
+                           c_array[i].tickets[j].event_title,
+                           c_array[i].tickets[j].date_and_time,
+                           &c_array[i].tickets[j].ticket_price);
+                }
+                break;
+            case 3: // TOTAL COST
+                sscanf(temp, "%f", &c_array[i].total_cost);
+                break;
+            default:
+                break;
             }
-            status++;
-            break;
-        case 3: // TOTAL COST
-            sscanf(temp, "%f", &c_array[i].total_cost);
-            i++;
-            status = 0;
-            break;
-        default:
-            break;
         }
     }
     fclose(fp);
@@ -743,6 +759,8 @@ void load_customers(char *c_file, Customer *c_array, int *c_count)
 
 void delete_empty_customers(Customer *c_array, int *c_count)
 {
+    // Essentially removes Customers from the array if
+    // they do not have any tickets bought
     for (int i = 0; i < *c_count;)
     {
         if (c_array[i].tickets_bought == 0)
@@ -766,7 +784,7 @@ int events_in_stock(Event *e_array, int e_count)
     {
         if (e_array[i].stock != 0)
         {
-            return 1;
+            return 1; // returns true if there is at least one event with stock
         }
     }
     return 0;
@@ -774,9 +792,11 @@ int events_in_stock(Event *e_array, int e_count)
 
 void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
 {
+    // Variables
     char *temp;
     int c_index, e_index, event_id;
 
+    // If no event is in stock, there is nothing to buy.
     if (!events_in_stock(e_array, e_count))
     {
         view_events_l(e_array, e_count);
@@ -812,7 +832,7 @@ void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
     // Print events
     view_events_l(e_array, e_count);
 
-    // Ask for an Event id
+    // Event ID
     do
     {
         printf("Event ID: ");
@@ -836,7 +856,7 @@ void buy_ticket(Event *e_array, int e_count, Customer *c_array, int *c_count)
         }
     } while (event_id <= 0 || e_index == -1);
 
-    // Add the Event to the Customer's tickets array
+    // Copy the Event details to the Customer's Tickets array and decrease Event stock
     c_array[c_index].tickets[c_array[c_index].tickets_bought].event_id = e_array[e_index].event_id;
     strcpy(c_array[c_index].tickets[c_array[c_index].tickets_bought].event_title, e_array[e_index].event_title);
     strcpy(c_array[c_index].tickets[c_array[c_index].tickets_bought].date_and_time, e_array[e_index].date_and_time);
