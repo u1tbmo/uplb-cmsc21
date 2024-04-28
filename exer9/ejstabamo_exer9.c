@@ -672,7 +672,7 @@ void save_customers(char *c_file, Customer *c_array, int c_count)
     // Write the count
     fprintf(fp, "%d\n", c_count);
 
-    if (c_count)
+    if (c_count == 0)
     {
         printf("No customers were saved.\n");
         return;
