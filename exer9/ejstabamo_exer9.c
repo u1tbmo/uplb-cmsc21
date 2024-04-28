@@ -403,7 +403,7 @@ void edit_event(Event *e_array, int e_count, Customer *c_array, int c_count)
     // ! UNCLEAR SPECIFICATIONS: Should editing the Date and Time of the Event
     // ! also edit the Date and Time of the Tickets bought by the customers?
     // ! Opted to not edit the date and time of the customers, since
-    // ! the edit_event() can be used to "re-stock" tickets for a new Date and Time
+    // ! edit_event() can be used to "re-stock" tickets for a new Date and Time
     // for (int i = 0; i < c_count; i++) // Edit the date and time of all Tickets with the same event ID
     // {
     //     for (int j = 0; j < c_array[i].tickets_bought; j++)
@@ -478,8 +478,9 @@ void delete_event(Event *e_array, int *e_count, Customer *c_array, int *c_count)
         printf("Error: Event with ID %d does not exist.\n\n", event_id);
     }
 
-    // ! UNCLEAR SPECIFICATIONS: Should deleting an event delete tickets from customers?
-    // ! Opted to delete tickets to prevent conflicting event IDs.
+    // ! UNCLEAR SPECIFICATIONS: Should deleting an event delete tickets
+    // ! with the same event ID from customers?
+    // ! Opted to delete tickets to prevent tickets with conflicting event IDs.
     for (int h = 0; h < *c_count; h++)
     {
         for (int k = 0; k < c_array[h].tickets_bought;)
@@ -535,10 +536,17 @@ void view_events_l(Event *e_array, int e_count)
 
 void save_events(char *e_file, Event *e_array, int e_count)
 {
+
     FILE *fp = fopen(e_file, "w");
 
     // Write the count
     fprintf(fp, "%d\n", e_count);
+
+    if (e_count == 0)
+    {
+        printf("No events were saved.");
+        return;
+    }
 
     for (int i = 0; i < e_count; i++)
     {
@@ -663,6 +671,12 @@ void save_customers(char *c_file, Customer *c_array, int c_count)
 
     // Write the count
     fprintf(fp, "%d\n", c_count);
+
+    if (c_count)
+    {
+        printf("No customers were saved.\n");
+        return;
+    }
 
     for (int i = 0; i < c_count; i++)
     {
