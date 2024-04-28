@@ -628,17 +628,10 @@ void load_events(char *e_file, Event *e_array, int *e_count)
 
 void add_customer(Customer *c_array, int *c_count, char *c_name)
 {
-    // Copy the name to the Customer name field
-    strcpy(c_array[*c_count].name, c_name);
-
-    // Tickets Bought
-    c_array[*c_count].tickets_bought = 0;
-
-    // Total Cost
-    c_array[*c_count].total_cost = 0;
-
-    // Increment Count
-    (*c_count)++;
+    strcpy(c_array[*c_count].name, c_name); // Customer Name
+    c_array[*c_count].tickets_bought = 0;   // Tickets Bought
+    c_array[*c_count].total_cost = 0;       // Total Cost
+    (*c_count)++;                           // Increment Count
 }
 
 void view_customers(Customer *c_array, int c_count)
@@ -735,7 +728,7 @@ void load_customers(char *c_file, Customer *c_array, int *c_count)
                     {
                         fgets(temp, STR_MAX_LENGTH, fp); // ensure we actually read a new line
                     }
-                    sscanf(temp, "%d\t%[^\t\n]\t%[^\t\n]\t%f",
+                    sscanf(temp, "%d\t%[^\t\n]\t%[^\t\n]\t%f", // [^\t\n] is a scanset, stopping when encountering a newline or tab
                            &c_array[i].tickets[j].event_id,
                            c_array[i].tickets[j].event_title,
                            c_array[i].tickets[j].date_and_time,
