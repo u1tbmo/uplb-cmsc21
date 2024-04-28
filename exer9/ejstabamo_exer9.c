@@ -79,9 +79,9 @@ int main()
     // Initialize event and customer counts, and the user's meny choice
     int e_count = 0, c_count = 0, choice;
 
-    // Allocate memory for the customer and event arrays
-    Customer *c_array = (Customer *)malloc(sizeof(Customer) * MAX_CUSTOMERS);
-    Event *e_array = (Event *)malloc(sizeof(Event) * MAX_EVENTS);
+    // Customer and Event Arrays
+    Event e_array[MAX_EVENTS];
+    Customer c_array[MAX_CUSTOMERS];
 
     // Initialize events and customers to default values
     initialize_events(e_array);
@@ -141,6 +141,10 @@ int main()
             view_customers(c_array, c_count);
             break;
         case 0: // Exit the program
+            // Save events and customers to files
+            save_events(EVENTS_FILE, e_array, e_count);
+            save_customers(CUSTOMERS_FILE, c_array, c_count);
+
             printf("Goodbye!\n");
             break;
         default: // Handle invalid choices
@@ -148,14 +152,7 @@ int main()
             break;
         }
         delete_empty_customers(c_array, &c_count); // Delete any Customers with 0 tickets
-        // Save events and customers to files
-        save_events(EVENTS_FILE, e_array, e_count);
-        save_customers(CUSTOMERS_FILE, c_array, c_count);
     } while (choice != 0);
-
-    // Free allocated memory
-    free(c_array);
-    free(e_array);
 }
 
 int menu()
@@ -187,7 +184,7 @@ char *get_string()
         return NULL;
     }
 
-    // Read a max of 50 characters.
+    // Read a max of STR_MAX_LENGTH characters.
     if (fgets(temp, STR_MAX_LENGTH, stdin) == NULL) // If fgets failed
     {
         printf("Error: Unable to read input.\n\n");
