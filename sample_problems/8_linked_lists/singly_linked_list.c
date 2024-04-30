@@ -13,12 +13,12 @@ Node *free_list(Node *head);
 
 void print_list(Node *head);
 int count_nodes(Node *head);
-Node *append(Node *head, int data);
-Node *prepend(Node *head, int data);
-Node *insert(Node *head, int data, int position);
-Node *delete(Node *head, int position);
-Node *destroy(Node *head);
-Node *reverse(Node *head);
+Node *append_node(Node *head, int data);
+Node *prepend_node(Node *head, int data);
+Node *insert_node(Node *head, int data, int position);
+Node *delete_node(Node *head, int position);
+Node *destroy_list(Node *head);
+Node *reverse_list(Node *head);
 
 int main()
 {
@@ -51,12 +51,12 @@ int main()
 
             printf("Enter a number: ");
             data = get_int();
-            head = append(head, data);
+            head = append_node(head, data);
             break;
         case '2':
             printf("Enter a number: ");
             data = get_int();
-            head = prepend(head, data);
+            head = prepend_node(head, data);
             break;
         case '3':
             if (count == 0)
@@ -73,7 +73,7 @@ int main()
             }
             printf("Enter a number: ");
             data = get_int();
-            head = insert(head, data, position);
+            head = insert_node(head, data, position);
             break;
         case '4':
             if (count == 0)
@@ -88,13 +88,13 @@ int main()
                 printf("Error: Position out of bounds.\n\n");
                 break;
             }
-            head = delete (head, position);
+            head = delete_node(head, position);
             break;
         case '5':
-            head = destroy(head);
+            head = destroy_list(head);
             break;
         case '6':
-            head = reverse(head);
+            head = reverse_list(head);
             break;
         case 'x':
         case 'X':
@@ -169,7 +169,7 @@ int count_nodes(Node *head)
     return count;
 }
 
-Node *append(Node *head, int data)
+Node *append_node(Node *head, int data)
 {
     Node *ptr, *temp;
 
@@ -192,7 +192,7 @@ Node *append(Node *head, int data)
     return head;
 }
 
-Node *prepend(Node *head, int data)
+Node *prepend_node(Node *head, int data)
 {
     Node *temp = (Node *)malloc(sizeof(Node));
     *temp = (Node){.data = data, .next = NULL};
@@ -202,11 +202,11 @@ Node *prepend(Node *head, int data)
     return head;
 }
 
-Node *insert(Node *head, int data, int position)
+Node *insert_node(Node *head, int data, int position)
 {
     if (position == 1)
     {
-        return prepend(head, data);
+        return prepend_node(head, data);
     }
 
     Node *ptr = head;
@@ -226,7 +226,7 @@ Node *insert(Node *head, int data, int position)
     return head;
 }
 
-Node *delete(Node *head, int position)
+Node *delete_node(Node *head, int position)
 {
     Node *previous = head;
     Node *current = head;
@@ -240,7 +240,7 @@ Node *delete(Node *head, int position)
         return head;
     }
     // Delete in the middle
-    while (position != 2)
+    while (position != 1)
     {
         previous = current;
         current = current->next;
@@ -253,7 +253,7 @@ Node *delete(Node *head, int position)
     return head;
 }
 
-Node *destroy(Node *head)
+Node *destroy_list(Node *head)
 {
     Node *ptr = head;
     while (ptr != NULL)
@@ -266,7 +266,7 @@ Node *destroy(Node *head)
     return head;
 }
 
-Node *reverse(Node *head)
+Node *reverse_list(Node *head)
 {
     Node *prev = NULL;
     Node *next = NULL;
