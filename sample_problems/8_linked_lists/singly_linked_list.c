@@ -48,7 +48,6 @@ int main()
         switch (choice)
         {
         case '1':
-
             printf("Enter a number: ");
             data = get_int();
             head = append_node(head, data);
