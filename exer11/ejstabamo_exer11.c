@@ -96,6 +96,7 @@ int main()
     do
     {
         choice = menu();
+        printf("\n");
         switch (choice)
         {
         case '1':
