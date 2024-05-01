@@ -51,7 +51,7 @@ int customer_position(Customer *head, char *name); // Returns the position of a 
 
 // Linked List Functions
 Event *create_event();                                // Creates an Event with default values
-void events_append(Event **head, Event *e);           // Append an Event node to a LL
+void events_insert(Event **head, Event *e);           // Insert an Event node to a LL (alphabetical)
 void events_delete(Event **head, char *event_id);     // Delete an Event node from a LL
 void events_destroy(Event **head);                    // Free/destroy an Event LL
 int events_count(Event *head);                        // Count the number of Events in an LL
@@ -258,21 +258,30 @@ Event *create_event()
 
     return e;
 }
-void events_append(Event **head, Event *e)
+void events_insert(Event **head, Event *e)
 {
-    Event *ptr = *head;
+    Event *curr = *head;
 
-    if (ptr == NULL) // If LL is empty
+    // If LL is empty or name is alphabetically before the head event's name
+    if (curr == NULL || strcmp(e->event_title, curr->event_title) < 0)
     {
+        e->next_event = curr;
         *head = e;
-        return;
     }
-
-    while (ptr->next_event != NULL) // Traverse to the end of the LL
+    else
     {
-        ptr = ptr->next_event;
+        // Traverse to the correct spot (to sort alphabetically)
+        while (curr->next_event != NULL)
+        {
+            if (strcmp(e->event_title, curr->event_title) < 0)
+            {
+                break;
+            }
+            curr = curr->next_event;
+        }
+        e->next_event = curr->next_event;
+        curr->next_event = e;
     }
-    ptr->next_event = e;
 }
 void events_delete(Event **head, char *event_id)
 {
@@ -529,7 +538,7 @@ void add_event(Event **head)
         }
     } while (e->stock < 0);
 
-    events_append(&(*head), e);
+    events_insert(&(*head), e);
 
     printf("Success: Event added.\n\n");
 }
@@ -856,9 +865,9 @@ void save_customers(Customer *head)
 }
 void load_events(Event **head)
 {
-    Event *temp;                  // Temporary Event node
-    char string_temp[STR_LENGTH]; // Temporary string variable
-    int count = 0;                // Hold the event quantity
+    Event *temp;                      // Temporary Event node
+    char string_temp[STR_LENGTH + 1]; // Temporary string variable
+    int count = 0;                    // Hold the event quantity
 
     FILE *fp = fopen(EVENT_FILE, "r"); // Open the file
     if (fp == NULL)                    // If the file does not exist, create the file
@@ -882,22 +891,22 @@ void load_events(Event **head)
         temp = create_event(); // Allocate memory for the Event
 
         // Event ID
-        fgets(string_temp, ID_LENGTH, fp);
+        fgets(string_temp, ID_LENGTH + 1, fp); // + 1 to account for the '\n' in the file
         string_temp[strcspn(string_temp, "\n")] = '\0';
         strcpy(temp->event_id, string_temp);
 
         // Event Title
-        fgets(string_temp, STR_LENGTH, fp);
+        fgets(string_temp, STR_LENGTH + 1, fp);
         string_temp[strcspn(string_temp, "\n")] = '\0';
         strcpy(temp->event_title, string_temp);
 
         // Artist
-        fgets(string_temp, STR_LENGTH, fp);
+        fgets(string_temp, STR_LENGTH + 1, fp);
         string_temp[strcspn(string_temp, "\n")] = '\0';
         strcpy(temp->artist, string_temp);
 
         // Date and Time
-        fgets(string_temp, STR_LENGTH, fp);
+        fgets(string_temp, STR_LENGTH + 1, fp);
         string_temp[strcspn(string_temp, "\n")] = '\0';
         strcpy(temp->datetime, string_temp);
 
@@ -910,8 +919,8 @@ void load_events(Event **head)
         // Sold Count
         fscanf(fp, "%d\n", &temp->sold_count);
 
-        // Append to Linked List
-        events_append(&(*head), temp);
+        // Insert to Linked List
+        events_insert(&(*head), temp);
     }
 }
 void load_customers(Event *e_head, Customer **c_head)
