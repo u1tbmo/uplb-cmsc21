@@ -272,12 +272,8 @@ void events_insert(Event **head, Event *e)
     else
     {
         // Traverse to the correct spot (to sort alphabetically)
-        while (curr->next_event != NULL)
+        while (curr->next_event != NULL && strcmp(e->event_title, curr->next_event->event_title) >= 0)
         {
-            if (strcmp(e->event_title, curr->event_title) < 0)
-            {
-                break;
-            }
             curr = curr->next_event;
         }
         e->next_event = curr->next_event;
