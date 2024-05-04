@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define ID_LENGTH 5
-#define STR_LENGTH 30 // increased to 30 since some dates were being cut off
+#define STR_LENGTH 50 // increased to 50 to allow for longer strings
 #define EVENT_FILE "events.txt"
 #define CUSTOMER_FILE "customers.txt"
 
@@ -50,17 +50,17 @@ int event_position(Event *head, char *event_id);   // Returns the position of an
 int customer_position(Customer *head, char *name); // Returns the position of a customer in an LL, -1 if it doesn't exist
 
 // Linked List Functions
-Event *create_event();                                // Creates an Event with default values
+Event *create_event();                                // Creates an Event Node with default values
 void events_insert(Event **head, Event *e);           // Insert an Event node to a LL (alphabetical)
 void events_delete(Event **head, char *event_id);     // Delete an Event node from a LL
 void events_destroy(Event **head);                    // Free/destroy an Event LL
 int events_count(Event *head);                        // Count the number of Events in an LL
-Customer *create_customer();                          // Creates a Customer with default values
+Customer *create_customer();                          // Creates a Customer Node with default values
 void customers_append(Customer **head, Customer *c);  // Append a Customer node to a LL
 void customers_delete(Customer **head, char *name);   // Delete a Customer node from a LL
 void customers_destroy(Customer **head);              // Free/destroy a Customer LL
 int customers_count(Customer *head);                  // Count the number of Customers in an LL
-Booking *create_booking();                            // Creates a Booking with default values
+Booking *create_booking();                            // Creates a Booking Node with default values
 void bookings_append(Booking **head, Booking *b);     // Append a Booking node to a LL
 void bookings_delete(Booking **head, char *event_id); // Delete a Booking node from a LL
 void bookings_destroy(Booking **head);                // Free/destroy a Booking LL
@@ -88,6 +88,7 @@ int main()
     Event *e_head = NULL;
     Customer *c_head = NULL;
 
+    // Load Events and Customers
     load_events(&e_head);
     load_customers(e_head, &c_head);
 
@@ -99,10 +100,10 @@ int main()
         printf("\n");
         switch (choice)
         {
-        case '1':
+        case '1': // Add Event
             add_event(&e_head);
             break;
-        case '2':
+        case '2': // Buy a Ticker
             if (e_head == NULL)
             {
                 printf("Error: No events.\n\n");
@@ -110,7 +111,7 @@ int main()
             }
             buy_ticket(e_head, &c_head);
             break;
-        case '3':
+        case '3': // Edit Event
             if (e_head == NULL)
             {
                 printf("Error: No events.\n\n");
@@ -118,7 +119,7 @@ int main()
             }
             edit_event(e_head, c_head);
             break;
-        case '4':
+        case '4': // Delete Event
             if (e_head == NULL)
             {
                 printf("Error: No events.\n\n");
@@ -126,7 +127,7 @@ int main()
             }
             delete_event(&e_head);
             break;
-        case '5':
+        case '5': // View all Events
             if (e_head == NULL)
             {
                 printf("Error: No events.\n\n");
@@ -134,7 +135,7 @@ int main()
             }
             view_events(e_head);
             break;
-        case '6':
+        case '6': // View all Customers
             if (c_head == NULL)
             {
                 printf("Error: No customers.\n\n");
@@ -142,16 +143,18 @@ int main()
             }
             view_customers(c_head);
             break;
-        case '0':
+        case '0': // Quit Program
             save_events(e_head);
             save_customers(c_head);
             printf("Goodbye!\n\n");
             break;
-        default:
+        default: // Invalid Choice
             printf("Error: Unknown choice\n\n");
             break;
         }
     } while (choice != '0');
+
+    // Destroy Linked Lists (Free allocated memory)
     events_destroy(&e_head);
     customers_destroy(&c_head);
     return 0;
@@ -190,7 +193,7 @@ char *get_string(int length)
         return NULL;
     }
 
-    // Read a max of `length` characters.
+    // Read a max of `length - 1` characters.
     if (fgets(temp, length, stdin) == NULL) // If fgets failed
     {
         printf("Error: Unable to read input.\n\n");
@@ -204,7 +207,7 @@ char *get_string(int length)
     {
         *newline = '\0';
     }
-    else
+    else // If there is no newline, ensure that extra characters are cleared from the buffer
     {
         clear_buffer();
     }
@@ -222,7 +225,7 @@ int event_position(Event *head, char *event_id)
         {
             return pos; // return the position of the Event in the LL
         }
-        temp = temp->next_event;
+        temp = temp->next_event; // Traverse
     }
     return -1;
 }
@@ -237,7 +240,7 @@ int customer_position(Customer *head, char *name)
         {
             return pos; // return the position of the Customer in the LL
         }
-        temp = temp->next_customer;
+        temp = temp->next_customer; // Traverse
     }
     return -1;
 }
@@ -312,9 +315,9 @@ void events_destroy(Event **head)
     Event *ptr = *head;
     while (ptr != NULL)
     {
-        ptr = ptr->next_event;
-        free(*head);
-        *head = ptr;
+        ptr = ptr->next_event; // Traverse
+        free(*head);           // Free the head node
+        *head = ptr;           // Set the head node
     }
 }
 int events_count(Event *head)
@@ -323,8 +326,8 @@ int events_count(Event *head)
     Event *ptr = head;
     while (ptr != NULL)
     {
-        count++;
-        ptr = ptr->next_event;
+        count++;               // Count for every Node in the LL
+        ptr = ptr->next_event; // Traverse
     }
     return count;
 }
@@ -348,7 +351,7 @@ void customers_append(Customer **head, Customer *c)
 
     if (ptr == NULL) // If LL is empty
     {
-        *head = c;
+        *head = c; // The c node is now the head node of the LL
         return;
     }
     while (ptr->next_customer != NULL) // Traverse to the end of the LL
@@ -362,7 +365,7 @@ void customers_delete(Customer **head, char *name) // * Currently unused
     Customer *prev = *head;
     Customer *curr = *head;
 
-    if (customer_position(*head, name) == -1)
+    if (customer_position(*head, name) == -1) // Ensure customer exists
     {
         printf("Error: Customer does not exist.\n\n");
         return;
@@ -650,7 +653,7 @@ void delete_event(Event **e_head)
     {
         if (strcmp(e->event_id, event_id) == 0)
         {
-            if (e->sold_count != 0)
+            if (e->sold_count != 0) // If there is at least one sold ticket, we cannot delete it
             {
                 printf("Error: Ticket has been bought by a customer.\n\n");
                 free(event_id);
@@ -678,7 +681,7 @@ void view_events(Event *head)
         printf("Date and Time: %s\n", ptr->datetime);
         printf("Ticket Price: %.2f\n", ptr->ticket_price);
         printf("Stock: %d\n", ptr->stock);
-        printf("Sold Count: %d\n", ptr->sold_count);
+        // printf("Sold Count: %d\n", ptr->sold_count); // Hide the sold count from the user
         ptr = ptr->next_event;
     }
     printf("--------------------------------------\n\n");
@@ -862,7 +865,7 @@ void save_customers(Customer *head)
 }
 void load_events(Event **head)
 {
-    Event *temp;                      // Temporary Event node
+    Event *temp = NULL;               // Temporary Event node
     char string_temp[STR_LENGTH + 1]; // Temporary string variable
     int count = 0;                    // Hold the event quantity
 
@@ -922,9 +925,9 @@ void load_events(Event **head)
 }
 void load_customers(Event *e_head, Customer **c_head)
 {
-    Customer *c_temp;             // Temporary Customer node (to hold data)
-    Booking *b_temp;              // Temporary Booking node (to hold data)
-    Event *e_ptr;                 // Temporary Event node (to be assigned)
+    Customer *c_temp = NULL;      // Temporary Customer node (to hold data)
+    Booking *b_temp = NULL;       // Temporary Booking node (to hold data)
+    Event *e_ptr = NULL;          // Temporary Event node (to be assigned)
     char string_temp[STR_LENGTH]; // Temporary string variable
     int c_count = 0;              // Hold the customer quantity
     int b_count = 0;              // Hold the booking quantity (per customer)
