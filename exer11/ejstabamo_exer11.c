@@ -754,7 +754,10 @@ void buy_ticket(Event *e_head, Customer **c_head)
     {
         printf("Error: Event does not exist.\n\n");
         free(string_temp);
-        free(c);
+        if (is_new)
+        {
+            free(c);
+        }
         return;
     }
     else // If the event exists
