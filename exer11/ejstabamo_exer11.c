@@ -719,10 +719,10 @@ void view_customers(Customer *head)
 }
 void buy_ticket(Event *e_head, Customer **c_head)
 {
-    Customer *c;    // Customer node
-    Event *e;       // Event node
-    Booking *b;     // Booking node
-    int is_new = 0; // Boolean flag indicating if the customer is new or not
+    Customer *c = NULL; // Customer node
+    Event *e = NULL;    // Event node
+    Booking *b = NULL;  // Booking node
+    int is_new = 0;     // Boolean flag indicating if the customer is new or not
 
     char *string_temp; // Temporary string variable
 
