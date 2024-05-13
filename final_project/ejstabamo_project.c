@@ -11,7 +11,6 @@
 #define MONTH_STR_LEN 10
 #define INITIAL_BUFFER_LEN 16
 #define MIN_PASSENGERS 1
-#define MAX_STR_LEN 101
 #define FLIGHTS_FILE "flights.txt"
 #define PASSENGERS_FILE "passengers.txt"
 
@@ -138,7 +137,9 @@ int count_reservations(Reservation *head);                                // Cou
 void add_flight(Flight **head);                             // Adds a flight to the database
 void edit_flight(Flight *head);                             // Edits a flight in the database
 void view_flights(Flight *head, int mode);                  // Views flights in the database
-void view_flights_linear(Flight *head, int mode);           // Views flights in the database (linear format)
+bool view_flights_linear(Flight *head, int mode);           // Views flights in the database (linear format)
+void view_passengers_linear(Passenger *head);               // Views passengers in the database (linear format)
+void view_reservations_linear(Reservation *head);           // Views reservations for a passenger (linear format)
 void delete_flight(Flight **head);                          // Deletes a flight from the database
 void add_passenger(Passenger **head);                       // Adds a passenger to the database
 void edit_passenger(Passenger *head);                       // Edits a passenger in the database
@@ -280,7 +281,7 @@ int main_menu()
 {
     int choice;
 
-    printf("================ Menu ================\n");
+    printf("================== Menu ===================\n\n");
     printf("1 | Add Flight\n");
     printf("2 | Edit Flight\n");
     printf("3 | View Flights\n");
@@ -300,7 +301,7 @@ int view_flights_menu()
 {
     int choice;
 
-    printf("============ View Flights ============\n");
+    printf("============== View Flights ===============\n\n");
     printf("1 | View Specific Flight\n");
     printf("2 | View All Available Flights\n");
     printf("3 | View All Fully-booked Flights\n");
@@ -325,7 +326,7 @@ bool confirm_delete()
     }
     else
     {
-        printf("[Error] '%s' does not match 'Y'. Cancelling.\n\n", choice);
+        printf("[Info] '%s' does not match 'Y'. Cancelling.\n\n", choice);
         free(choice);
         return false; // return false otherwise
     }
@@ -521,11 +522,7 @@ bool is_conflicting(DateTime departure1, DateTime arrival1, DateTime departure2,
     long long arrival2_in_minutes = datetime_to_minutes(arrival2);
 
     // Check if the two time periods overlap
-    if ((departure2_in_minutes <= departure1_in_minutes) && (arrival2_in_minutes >= arrival1_in_minutes))
-    {
-        return true;
-    }
-    else if ((departure1_in_minutes <= departure2_in_minutes) && (arrival1_in_minutes >= arrival2_in_minutes))
+    if ((departure1_in_minutes <= arrival2_in_minutes) && (arrival1_in_minutes >= departure2_in_minutes))
     {
         return true;
     }
@@ -627,7 +624,7 @@ Date get_date()
         new_date.year = get_int("Year:  ");
         if (new_date.year < 1909) // First recorded use of an airport :)
         {
-            printf("[Error] Year is invalid.\n");
+            printf("[Error] Invalid year. Please type a valid year.\n");
         }
     } while (new_date.year < 1909);
 
@@ -640,7 +637,7 @@ Date get_date()
         month_is_valid = valid_month(input);
         if (!month_is_valid)
         {
-            printf("[Error] Month is invalid.\n");
+            printf("[Error] Invalid month. Please type a valid month name.\n");
         }
         else
         {
@@ -658,7 +655,7 @@ Date get_date()
         day_is_valid = valid_day(new_date.day, new_date.month, new_date.year);
         if (!day_is_valid)
         {
-            printf("[Error] Invalid day.\n");
+            printf("[Error] Invalid day. Please type a valid day.\n");
         }
     } while (!day_is_valid);
 
@@ -681,7 +678,7 @@ DateTime get_datetime(bool is_arrival, DateTime *departure)
             new_date.year = get_int("Year:    ");
             if (new_date.year < 1909) // First recorded use of an airport :)
             {
-                printf("[Error] Year is invalid.\n");
+                printf("[Error] Invalid year. Please type a valid year.\n");
             }
         } while (new_date.year < 1909);
 
@@ -698,7 +695,7 @@ DateTime get_datetime(bool is_arrival, DateTime *departure)
             month_is_valid = valid_month(input);
             if (!month_is_valid)
             {
-                printf("[Error] Month is invalid.\n");
+                printf("[Error] Invalid month. Please type a valid month name.\n");
             }
             else
             {
@@ -714,7 +711,7 @@ DateTime get_datetime(bool is_arrival, DateTime *departure)
             new_date.day = get_int("Day:     ");
             if (!(valid_day(new_date.day, new_date.month, new_date.year)))
             {
-                printf("[Error] Invalid day.\n");
+                printf("[Error] Invalid day. Please type a valid day.\n");
             }
 
         } while (!(valid_day(new_date.day, new_date.month, new_date.year)));
@@ -748,7 +745,7 @@ DateTime get_datetime(bool is_arrival, DateTime *departure)
 
         if (!datetime_is_valid)
         {
-            printf("[Error] Arrival must be in the future.\n");
+            printf("[Error] Your arrival must be after the departure.\n");
         }
     } while (!datetime_is_valid);
     return new_datetime;
@@ -794,6 +791,9 @@ void free_passenger_node(Passenger *node)
         {
             free(node->passport_number);
         }
+
+        // Free reservations
+        free_reservations(node->reservations);
 
         // Free the node
         free(node);
@@ -915,6 +915,7 @@ void delete_flight_node(Flight **head, char *flight_id)
         *head = (*head)->next;
 
         free_flight_node(temp);
+        return;
     }
 
     while (strcmp(curr->flight_id, flight_id) != 0) // Find the node to delete
@@ -1086,6 +1087,7 @@ void delete_reservation_node(Reservation **head, Flight *flight)
         *head = (*head)->next;
 
         free(temp);
+        return;
     }
 
     while (strcmp(curr->flight->flight_id, flight->flight_id) != 0) // Find the node to delete
@@ -1115,20 +1117,20 @@ void add_flight(Flight **head)
 {
     char *temp = NULL;
 
-    printf("== Add Flight ========================\n\n");
+    printf("== Add Flight =============================\n\n");
 
     // Flight ID
     printf("Flight ID:   ");
     temp = get_string(stdin);
     if (!validate_id(temp))
     {
-        printf("[Error] A valid Flight ID has uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
         free(temp);
         return;
     }
     if (search_flight_node(*head, temp) != NULL)
     {
-        printf("[Error] Flight already exists.\n\n");
+        printf("[Error] That flight already exists.\n\n");
         free(temp);
         return;
     }
@@ -1178,7 +1180,7 @@ void add_flight(Flight **head)
 
     insert_flight_node(&(*head), new_flight);
 
-    printf("\nSuccess: Added Flight %s\n\n", new_flight->flight_id);
+    printf("\n[Success] Added Flight %s.\n\n", new_flight->flight_id);
 }
 
 void edit_flight(Flight *head)
@@ -1186,7 +1188,7 @@ void edit_flight(Flight *head)
     char *flight_id;
     Flight *node_ptr = NULL;
 
-    printf("== Edit Flight =======================\n");
+    printf("== Edit Flight ============================\n\n");
 
     view_flights_linear(head, 1);
 
@@ -1195,12 +1197,12 @@ void edit_flight(Flight *head)
     flight_id = get_string(stdin);
     if (!validate_id(flight_id))
     {
-        printf("[Error] A valid Flight ID has uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
         return;
     }
     if ((node_ptr = search_flight_node(head, flight_id)) == NULL)
     {
-        printf("[Error] Flight does not exist.\n\n");
+        printf("[Error] That flight does not exist.\n\n");
         return;
     }
     free(flight_id);
@@ -1224,11 +1226,11 @@ void edit_flight(Flight *head)
         }
         if (node_ptr->passenger_max < node_ptr->passenger_qty)
         {
-            printf("[Error] Cannot decrease maximum passengers below number of reserved passengers.\n");
+            printf("[Error] You cannot decrease maximum passengers below number of reserved passengers.\n");
         }
     } while (node_ptr->passenger_max < MIN_PASSENGERS);
 
-    printf("\nSuccess: Edited Flight %s\n\n", node_ptr->flight_id);
+    printf("\n[Success] Edited Flight %s.\n\n", node_ptr->flight_id);
 }
 
 void view_flights(Flight *head, int mode)
@@ -1242,13 +1244,15 @@ void view_flights(Flight *head, int mode)
         char *flight_id;
         printf("-- View Flights > Specific -----------\n\n");
 
+        view_flights_linear(head, 3);
+
         // Ask for a Flight ID
         printf("Flight ID: ");
         flight_id = get_string(stdin);
         printf("\n");
         if (!validate_id(flight_id))
         {
-            printf("[Error] A valid Flight ID has uppercase letters and/or digits only.\n\n");
+            printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
             free(flight_id);
             return;
         }
@@ -1350,22 +1354,25 @@ void view_flights(Flight *head, int mode)
         }
         break;
     default:
+        printf("\n[Error] Invalid choice.\n\n");
         break;
     }
 }
 
-void view_flights_linear(Flight *head, int mode)
+bool view_flights_linear(Flight *head, int mode)
 {
     Flight *ptr = head;
+    int count = 0;
     switch (mode)
     {
     case 1: // Available Flights (for Booking)
+        printf("-- All Flights -----------------------\n\n");
         printf("-- Available Flights -----------------\n\n");
         while (ptr != NULL)
         {
             if (ptr->passenger_qty < ptr->passenger_max)
             {
-                printf("%s \t| %s to %s \t| %d %s %d / %02d:%02d \t- %d %s %d / %02d:%02d\n",
+                printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
                        ptr->flight_id, ptr->origin, ptr->destination,
                        ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
                        ptr->departure.time.hours, ptr->departure.time.minutes,
@@ -1382,30 +1389,92 @@ void view_flights_linear(Flight *head, int mode)
         {
             if (ptr->passenger_qty == 0)
             {
-                printf("%s \t| %s to %s \t| %d %s %d / %02d:%02d \t- %d %s %d / %02d:%02d\n",
+                printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
                        ptr->flight_id, ptr->origin, ptr->destination,
                        ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
                        ptr->departure.time.hours, ptr->departure.time.minutes,
                        ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
                        ptr->arrival.time.hours, ptr->arrival.time.minutes);
+                count++;
             }
+            ptr = ptr->next;
+        }
+        if (count == 0)
+        {
+            printf("No flights are empty.\n\n");
+            return false;
+        }
+        printf("\n");
+        break;
+    case 3: // All Flights (for Viewing)
+        printf("-- All Flights -----------------------\n\n");
+        while (ptr != NULL)
+        {
+            printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
+                   ptr->flight_id, ptr->origin, ptr->destination,
+                   ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
+                   ptr->departure.time.hours, ptr->departure.time.minutes,
+                   ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
+                   ptr->arrival.time.hours, ptr->arrival.time.minutes);
+
             ptr = ptr->next;
         }
         printf("\n");
         break;
     default:
-        printf("\n[Error] Invalid choice.\n\n");
         break;
     }
+    return true;
+}
+
+void view_passengers_linear(Passenger *head)
+{
+    Passenger *ptr = head;
+
+    printf("-- Passengers ------------------------\n\n");
+    while (ptr != NULL)
+    {
+        printf("%s, %s | %s | %d flights reserved\n",
+               ptr->last_name, ptr->first_name,
+               ptr->passport_number, ptr->reservation_qty);
+        ptr = ptr->next;
+    }
+    printf("\n");
+}
+
+void view_reservations_linear(Reservation *head)
+{
+    Reservation *ptr = head;
+    Flight *f_ptr = NULL;
+    printf("-- Reservations ----------------------\n\n");
+    while (ptr != NULL)
+    {
+        f_ptr = ptr->flight;
+
+        printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
+               f_ptr->flight_id, f_ptr->origin, f_ptr->destination,
+               f_ptr->departure.date.day, f_ptr->departure.date.month, f_ptr->departure.date.year,
+               f_ptr->departure.time.hours, f_ptr->departure.time.minutes,
+               f_ptr->arrival.date.day, f_ptr->arrival.date.month, f_ptr->arrival.date.year,
+               f_ptr->arrival.time.hours, f_ptr->arrival.time.minutes);
+        ptr = ptr->next;
+    }
+    printf("\n");
 }
 
 void delete_flight(Flight **head)
 {
     Flight *ptr;
+    bool empty_flights_exists;
 
-    printf("== Delete Flight =====================\n\n");
+    printf("== Delete Flight ==========================\n\n");
 
-    view_flights_linear(*head, 2);
+    empty_flights_exists = view_flights_linear(*head, 2);
+
+    if (!empty_flights_exists)
+    {
+        return;
+    }
 
     // Ask for a Flight ID
     printf("Flight ID: ");
@@ -1419,30 +1488,30 @@ void delete_flight(Flight **head)
     }
     if ((ptr = search_flight_node(*head, flight_id)) == NULL)
     {
-        printf("[Error] Flight does not exist.\n\n");
+        printf("[Error] That flight does not exist.\n\n");
         return;
     }
-    if (ptr->passenger_max != 0)
+    if (ptr->passenger_qty != 0)
     {
-        printf("[Error] Passengers have booked this flight.\n\n");
+        printf("[Error] Passengers have already booked this flight.\n\n");
         return;
     }
     free(flight_id);
 
     if (confirm_delete())
     {
-        printf("Success: Deleted flight.\n\n");
+        printf("[Success] Deleted flight %s.\n\n", ptr->flight_id);
         delete_flight_node(&(*head), ptr->flight_id);
     }
     else
     {
-        printf("Info: Did not delete flight.\n\n");
+        printf("[Info] Did not delete flight.\n\n");
     }
 }
 
 void add_passenger(Passenger **head)
 {
-    printf("== Add Passenger =====================\n\n");
+    printf("== Add Passenger ==========================\n\n");
 
     char *first_name;
     char *last_name;
@@ -1490,12 +1559,14 @@ void add_passenger(Passenger **head)
 
     insert_passenger_node(*(&head), new_passenger);
 
-    printf("\nSuccess: Added Passenger %s\n\n", new_passenger->first_name);
+    printf("\n[Success] Added Passenger %s.\n\n", new_passenger->first_name);
 }
 
 void edit_passenger(Passenger *head)
 {
-    printf("== Edit Passenger ====================\n\n");
+    printf("== Edit Passenger =========================\n\n");
+
+    view_passengers_linear(head);
 
     char *passport_number;
     Passenger *node_ptr = NULL;
@@ -1506,18 +1577,18 @@ void edit_passenger(Passenger *head)
     printf("\n");
     if (!validate_passport(passport_number))
     {
-        printf("[Error] A valid passport number has 9 uppercase letters and/or digits.\n\n");
+        printf("[Error] A valid Passport Number has 9 uppercase letters and/or digits.\n\n");
         return;
     }
     if ((node_ptr = search_passenger_node(head, passport_number)) == NULL)
     {
-        printf("[Error] Passenger does not exist.\n\n");
+        printf("[Error] That passenger does not exist.\n\n");
         return;
     }
     free(passport_number);
 
     // New Last Name
-    printf("\nLast Name: \n");
+    printf("Last Name: ");
     free(node_ptr->last_name);
     node_ptr->last_name = get_string(stdin);
 
@@ -1526,7 +1597,7 @@ void edit_passenger(Passenger *head)
     node_ptr->birthdate = get_date();
     printf("\n--------------------------------------\n\n");
 
-    printf("\nSuccess: Edited Passenger %s\n\n", node_ptr->first_name);
+    printf("\n[Success] Edited Passenger %s.\n\n", node_ptr->first_name);
 }
 
 void book_reservation(Flight *f_head, Passenger *p_head)
@@ -1534,23 +1605,26 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     // Variables
     Passenger *passenger = NULL;
     Flight *flight = NULL;
+    DateTime *d_ptr = NULL, *a_ptr = NULL;
     Reservation *new_reservation = NULL;
     Reservation *reservation_ptr = NULL;
     char *passport_number, *flight_id;
 
-    printf("== Book Reservation ==================\n\n");
+    printf("== Book Reservation =======================\n\n");
+
+    view_passengers_linear(p_head);
 
     printf("Passport Number: ");
     passport_number = get_string(stdin);
     printf("\n");
     if (!validate_passport(passport_number))
     {
-        printf("[Error] A valid passport number has 9 uppercase letters and/or digits.\n\n");
+        printf("[Error] A valid Passport Number has 9 uppercase letters and/or digits.\n\n");
         return;
     }
     if ((passenger = search_passenger_node(p_head, passport_number)) == NULL)
     {
-        printf("[Error] Passenger does not exist.\n\n");
+        printf("[Error] That passenger does not exist.\n\n");
         return;
     }
     free(passport_number);
@@ -1562,17 +1636,17 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     printf("\n");
     if (!validate_id(flight_id))
     {
-        printf("[Error] A valid Flight ID has uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
         return;
     }
     if ((flight = search_flight_node(f_head, flight_id)) == NULL)
     {
-        printf("[Error] Flight does not exist.\n\n");
+        printf("[Error] That flight does not exist.\n\n");
         return;
     }
     if (flight->passenger_qty == flight->passenger_max)
     {
-        printf("[Error] Flight is fully booked.\n\n");
+        printf("[Error] That flight is fully booked.\n\n");
         return;
     }
 
@@ -1580,11 +1654,34 @@ void book_reservation(Flight *f_head, Passenger *p_head)
 
     for (int i = 0; i < passenger->reservation_qty; i++)
     {
+        if (reservation_ptr->flight->flight_id == flight->flight_id) // This works because they're the same addresses.
+        {
+            printf("[Error] You already reserved this flight.\n\n");
+            return;
+        }
+
+        d_ptr = &reservation_ptr->flight->departure;
+        a_ptr = &reservation_ptr->flight->arrival;
+
         if (is_conflicting(reservation_ptr->flight->departure,
                            reservation_ptr->flight->arrival,
                            flight->departure, flight->arrival))
         {
-            printf("[Error] Flight conflicts with current reservations.\n\n");
+            printf("[Error] That flight conflicts with current reservations.\n");
+            printf("Reserving:        ");
+            printf("%6s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
+                   flight->flight_id,
+                   flight->departure.date.day, flight->departure.date.month, flight->departure.date.year,
+                   flight->departure.time.hours, flight->departure.time.minutes,
+                   flight->arrival.date.day, flight->arrival.date.month, flight->arrival.date.year,
+                   flight->arrival.time.hours, flight->arrival.time.minutes);
+            printf("Conflicting with: ");
+            printf("%6s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n\n",
+                   reservation_ptr->flight->flight_id,
+                   d_ptr->date.day, d_ptr->date.month, d_ptr->date.year,
+                   d_ptr->time.hours, d_ptr->time.minutes,
+                   a_ptr->date.day, a_ptr->date.month, a_ptr->date.year,
+                   a_ptr->time.hours, a_ptr->time.minutes);
             return;
         }
         reservation_ptr = reservation_ptr->next;
@@ -1599,17 +1696,126 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     passenger->reservation_qty++;
     passenger->miles += flight->bonus_miles;
 
-    printf("\nSuccess: Reserved Flight %s for %s.\n\n", flight->flight_id, passenger->first_name);
+    printf("[Success] Reserved Flight %s for %s.\n\n", flight->flight_id, passenger->first_name);
 }
 
 void remove_reservation(Flight *f_head, Passenger *p_head)
 {
-    printf("== Remove Reservation ================\n");
+    char *passport_number, *flight_id;
+    Passenger *passenger = NULL;
+    Flight *flight = NULL;
+    Reservation *r_ptr = NULL;
+    Reservation *reservation = NULL;
+
+    printf("== Remove Reservation =====================\n\n");
+
+    view_passengers_linear(p_head);
+
+    printf("Passport Number: ");
+    passport_number = get_string(stdin);
+    printf("\n");
+    if (!validate_passport(passport_number))
+    {
+        printf("[Error] A valid Passport Number has 9 uppercase letters and/or digits.\n\n");
+        return;
+    }
+    if ((passenger = search_passenger_node(p_head, passport_number)) == NULL)
+    {
+        printf("[Error] That passenger does not exist.\n\n");
+        return;
+    }
+    if (passenger->reservation_qty == 0)
+    {
+        printf("[Error] That passenger has no reservations.\n\n");
+        return;
+    }
+    free(passport_number);
+
+    view_reservations_linear(passenger->reservations);
+
+    printf("Flight ID: ");
+    flight_id = get_string(stdin);
+    printf("\n");
+    if (!validate_id(flight_id))
+    {
+        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
+        return;
+    }
+    if ((flight = search_flight_node(f_head, flight_id)) == NULL)
+    {
+        printf("[Error] That flight does not exist.\n\n");
+        return;
+    }
+    free(flight_id);
+
+    reservation = search_reservation_node(passenger->reservations, flight);
+
+    if (confirm_delete())
+    {
+        passenger->reservation_qty--;
+        reservation->flight->passenger_qty--;
+        passenger->miles -= reservation->flight->bonus_miles;
+
+        printf("[Success] Deleted reservation %s for %s.\n\n", reservation->flight->flight_id, passenger->first_name);
+        delete_reservation_node(&passenger->reservations, reservation->flight);
+    }
+    else
+    {
+        printf("[Info] Did not delete reservation.\n\n");
+    }
 }
 
 void view_reservations(Passenger *head)
 {
-    printf("== View Reservations =================\n");
+    char *passport_number;
+    Passenger *p_ptr = NULL;
+    Flight *f_ptr = NULL;
+    Reservation *r_ptr = NULL;
+
+    printf("== View Reservations ======================\n\n");
+
+    view_passengers_linear(head);
+
+    printf("Passport Number: ");
+    passport_number = get_string(stdin);
+    printf("\n");
+    if (!validate_passport(passport_number))
+    {
+        printf("[Error] A valid Passport Number has 9 uppercase letters and/or digits.\n\n");
+        return;
+    }
+    if ((p_ptr = search_passenger_node(head, passport_number)) == NULL)
+    {
+        printf("[Error] That passenger does not exist.\n\n");
+        return;
+    }
+    if (p_ptr->reservation_qty == 0)
+    {
+        printf("[Error] That passenger has no reservations.\n\n");
+        return;
+    }
+    free(passport_number);
+
+    printf("-- Reservations ----------------------\n\n");
+
+    r_ptr = p_ptr->reservations;
+    while (r_ptr != NULL)
+    {
+        f_ptr = r_ptr->flight;
+        printf("Flight ID: %s\n", f_ptr->flight_id);
+        printf("Flight:    %s to %s\n", f_ptr->origin, f_ptr->destination);
+        printf("- Departure: %d %s %d - %02d:%02d\n",
+               f_ptr->departure.date.day, f_ptr->departure.date.month, f_ptr->departure.date.year,
+               f_ptr->departure.time.hours, f_ptr->departure.time.minutes);
+        printf("- Arrival:   %d %s %d - %02d:%02d\n",
+               f_ptr->arrival.date.day, f_ptr->arrival.date.month, f_ptr->arrival.date.year,
+               f_ptr->arrival.time.hours, f_ptr->arrival.time.minutes);
+        printf("Passengers:  %d\n", f_ptr->passenger_qty);
+        printf("Max Seats:   %d\n", f_ptr->passenger_max);
+        printf("Bonus Miles: %d\n", f_ptr->bonus_miles);
+        printf("\n");
+        r_ptr = r_ptr->next;
+    }
 }
 
 void load(Flight **f_head, Passenger **p_head)
@@ -1684,6 +1890,8 @@ void load(Flight **f_head, Passenger **p_head)
             char *flight_id = get_string(fp);
 
             reserved_flight = search_flight_node(*f_head, flight_id);
+
+            free(flight_id);
 
             Reservation *r_temp = create_reservation_node(reserved_flight);
 
