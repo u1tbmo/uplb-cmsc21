@@ -158,10 +158,10 @@ void view_reservations(Passenger *p_head);                  // Views all reserva
 void load(Flight **f_head, Passenger **p_head); // Load flights and passengers
 void save(Flight *f_head, Passenger *p_head);   // Save flights and passengers
 
-// Global Linked Lists (Needed for Clean Exit)
+// // Global Linked Lists (needed for clean_exit)
 
-Flight *flights_global = NULL;
-Passenger *passengers_global = NULL;
+// Flight *flights_global = NULL;
+// Passenger *passengers_global = NULL;
 
 int main()
 {
@@ -169,8 +169,8 @@ int main()
     int choice, view_choice;
 
     // Linked Lists
-    Flight *flights = flights_global;
-    Passenger *passengers = passengers_global;
+    Flight *flights = NULL;
+    Passenger *passengers = NULL;
 
     // Load Flights and Passengers from files
     load(&flights, &passengers);
@@ -333,9 +333,9 @@ bool confirm_delete()
 
 void clean_exit()
 {
-    // Free allocated memory
-    free_flights(flights_global);
-    free_passengers(passengers_global);
+    // // Free allocated memory
+    // free_flights(flights_global);
+    // free_passengers(passengers_global);
 
     // Exit with failure status
     exit(EXIT_FAILURE);
