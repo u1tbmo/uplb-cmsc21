@@ -605,13 +605,18 @@ char *get_string(FILE *stream)
 
 int get_int(char *prompt)
 {
-    int number;   // Holds the number that is converted from the string
-    char *input;  // Holds the string from the user
-    char *endptr; // Stores the endptr from strtol
+    int number;          // Holds the number that is converted from the string
+    char *input = NULL;  // Holds the string from the user
+    char *endptr = NULL; // Stores the endptr from strtol
 
     // Repeatedly ask for an integer
     do
     {
+        // Free previous input
+        if (input != NULL)
+        {
+            free(input);
+        }
         // Ask the user for a number in string form
         printf("%s", prompt);
         input = get_string(stdin);
@@ -1556,7 +1561,7 @@ void add_passenger(Passenger **head)
     char *first_name;               // Input string
     char *last_name;                // Input string
     Date birthdate;                 // Input string
-    char *passport_number;          // Input string
+    char *passport_number = NULL;   // Input string
     bool passport_is_valid = false; // Bool for validation
 
     // Ask for Name
@@ -1573,6 +1578,11 @@ void add_passenger(Passenger **head)
     // Ask for Passport Number and validate
     do
     {
+        // Free previous input
+        if (passport_number != NULL)
+        {
+            free(passport_number);
+        }
         printf("Passport Number: ");
         passport_number = get_string(stdin);
         printf("\n");
@@ -1991,6 +2001,12 @@ void load(Flight **f_head, Passenger **p_head)
 
             // Search for the flight
             reserved_flight = search_flight_node(*f_head, flight_id);
+            if (reserved_flight == NULL)
+            {
+                printf("[Error] Critical error. Flight missing from flights.txt file.\nCannot continue.\n");
+                printf("[Info] Please do not edit the files manually.\n\n");
+                clean_exit();
+            }
 
             free(flight_id); // Free the string
 
