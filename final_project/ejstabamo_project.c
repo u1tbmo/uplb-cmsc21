@@ -1195,7 +1195,7 @@ void add_flight(Flight **head)
         {
             printf("[Error] Destination cannot be empty.\n");
         }
-        if (dest_is_origin = (strcmp(new_flight->destination, new_flight->origin) == 0))
+        if ((dest_is_origin = strcmp(new_flight->destination, new_flight->origin) == 0))
         {
             printf("[Error] Destination cannot be the same as the origin.\n");
         }
@@ -1599,8 +1599,8 @@ void add_passenger(Passenger **head)
 {
     printf("== Add Passenger ==========================\n\n");
 
-    char *first_name;                                        // Input string
-    char *last_name;                                         // Input string
+    char *first_name = NULL;                                 // Input string
+    char *last_name = NULL;                                  // Input string
     Date birthdate;                                          // Input string
     char *passport_number = NULL;                            // Input string
     bool passport_is_valid = false, string_is_valid = false; // Bools for validation
