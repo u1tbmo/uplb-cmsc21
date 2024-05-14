@@ -1744,7 +1744,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
         {
 
             printf("[Error] That Flight conflicts with current reservations.\n");
-            printf("Reserving:        ");
+            printf("Reserving       : ");
             printf("%6s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
                    flight->flight_id,
                    flight->departure.date.day, flight->departure.date.month, flight->departure.date.year,
