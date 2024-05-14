@@ -664,7 +664,7 @@ Date get_date()
         }
         else
         {
-            strcpy(new_date.month, input);
+            strncpy(new_date.month, input, MONTH_STR_LEN);
         }
 
         free(input);
@@ -1269,11 +1269,11 @@ void view_flights(Flight *head, int mode)
 {
     int count = 0;
     Flight *ptr = head; // A pointer to the Flight to view
+    char *flight_id;    // Input string
 
     switch (mode)
     {
     case 1: // Mode 1: View Specific Flight
-        char *flight_id;
         printf("-- View Flights > Specific -----------\n\n");
 
         // Print flights (in linear form)
