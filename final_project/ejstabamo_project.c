@@ -86,6 +86,7 @@ int passenger_compare(Passenger *a, Passenger *b); // Compares two passengers
 
 bool valid_day(int day, char *month, int year); // Checks if a day is valid
 bool valid_month(char *input);                  // Checks if a month is valid
+bool valid_string(char *string);                // Checks if a string is valid
 bool validate_id(char *id);                     // Checks if an ID is valid, normalizes string to uppercase
 bool validate_passport(char *passport_numnber); // Checks if a passport is valid, normalizes string to uppercase
 
@@ -612,7 +613,7 @@ int get_int(char *prompt)
     // Repeatedly ask for an integer
     do
     {
-        // Free previous input
+        // Free previous input from the previous loop
         if (input != NULL)
         {
             free(input);
@@ -656,7 +657,6 @@ Date get_date()
     {
         printf("Month  : ");
         input = get_string(stdin);
-
         month_is_valid = valid_month(input);
         if (!month_is_valid)
         {
@@ -1128,7 +1128,8 @@ int count_reservations(Reservation *head)
 
 void add_flight(Flight **head)
 {
-    char *flight_id = NULL; // Holds the input flight_id
+    char *flight_id = NULL;       // Holds the input flight_id
+    bool string_is_valid = false; // Bool for validation
 
     printf("== Add Flight =============================\n\n");
 
@@ -1153,12 +1154,30 @@ void add_flight(Flight **head)
     new_flight->flight_id = flight_id;
 
     // Ask for Origin
-    printf("Origin     : ");
-    new_flight->origin = get_string(stdin);
+    do
+    {
+        // Free previous input from the previous loop
+        if (new_flight->origin != NULL)
+        {
+            free(new_flight->origin);
+        }
+        printf("Origin     : ");
+        new_flight->origin = get_string(stdin);
+        string_is_valid = valid_string(new_flight->origin);
+    } while (!string_is_valid);
 
     // Ask for Destination
-    printf("Destination: ");
-    new_flight->destination = get_string(stdin);
+    do
+    {
+        // Free previous input from the previous loop
+        if (new_flight->destination != NULL)
+        {
+            free(new_flight->destination);
+        }
+        printf("Destination: ");
+        new_flight->destination = get_string(stdin);
+        string_is_valid = valid_string(new_flight->destination);
+    } while (!string_is_valid);
 
     // Ask for Departure DateTime
     printf("\n-- Departure -------------------------\n\n");
@@ -1558,17 +1577,35 @@ void add_passenger(Passenger **head)
 {
     printf("== Add Passenger ==========================\n\n");
 
-    char *first_name;               // Input string
-    char *last_name;                // Input string
-    Date birthdate;                 // Input string
-    char *passport_number = NULL;   // Input string
-    bool passport_is_valid = false; // Bool for validation
+    char *first_name;                                        // Input string
+    char *last_name;                                         // Input string
+    Date birthdate;                                          // Input string
+    char *passport_number = NULL;                            // Input string
+    bool passport_is_valid = false, string_is_valid = false; // Bools for validation
 
     // Ask for Name
-    printf("First Name: ");
-    first_name = get_string(stdin);
-    printf("Last Name : ");
-    last_name = get_string(stdin);
+    do
+    {
+        // Free previous input from the previous loop
+        if (first_name != NULL)
+        {
+            free(first_name);
+        }
+        printf("First Name: ");
+        first_name = get_string(stdin);
+        string_is_valid = valid_string(first_name);
+    } while (!string_is_valid);
+    do
+    {
+        // Free previous input from the previous loop
+        if (last_name != NULL)
+        {
+            free(last_name);
+        }
+        printf("Last Name : ");
+        last_name = get_string(stdin);
+        string_is_valid = valid_string(last_name);
+    } while (!string_is_valid);
 
     // Ask for Birthdate
     printf("\n-- Date of Birth ---------------------\n\n");
@@ -1578,7 +1615,7 @@ void add_passenger(Passenger **head)
     // Ask for Passport Number and validate
     do
     {
-        // Free previous input
+        // Free previous input from the previous loop
         if (passport_number != NULL)
         {
             free(passport_number);
@@ -1626,6 +1663,8 @@ void add_passenger(Passenger **head)
 
 void edit_passenger(Passenger *head)
 {
+    bool string_is_valid = false; // Bool for validation
+
     printf("== Edit Passenger =========================\n\n");
 
     // Print passengers (in linear form)
@@ -1653,9 +1692,16 @@ void edit_passenger(Passenger *head)
     free(passport_number);
 
     // New Last Name
-    printf("Last Name: ");
-    free(p_ptr->last_name);
-    p_ptr->last_name = get_string(stdin);
+    do
+    {
+        if (p_ptr->last_name != NULL)
+        {
+            free(p_ptr->last_name);
+        }
+        printf("Last Name: ");
+        p_ptr->last_name = get_string(stdin);
+        string_is_valid = valid_string(p_ptr->last_name);
+    } while (!string_is_valid);
 
     // New Birthdate
     printf("\n-- Date of Birth ---------------------\n\n");
