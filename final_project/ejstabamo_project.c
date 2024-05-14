@@ -438,6 +438,15 @@ bool valid_month(char *input)
     return false; // Return false otherwise
 }
 
+bool valid_string(char *string)
+{
+    if (strlen(string) == 0)
+    {
+        return false; // Return false if the string is empty
+    }
+    return true; // Return true otherwise
+}
+
 bool validate_id(char *id)
 {
     // Check if the id exceeds the maximum length FLIGHT_ID_LEN
