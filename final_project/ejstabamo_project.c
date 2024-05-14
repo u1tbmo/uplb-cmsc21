@@ -159,11 +159,6 @@ void view_reservations(Passenger *p_head);                  // Views all reserva
 void load(Flight **f_head, Passenger **p_head); // Load flights and passengers
 void save(Flight *f_head, Passenger *p_head);   // Save flights and passengers
 
-// // Global Linked Lists (needed for clean_exit)
-
-// Flight *flights_global = NULL;
-// Passenger *passengers_global = NULL;
-
 int main()
 {
     // Variables
@@ -334,9 +329,10 @@ bool confirm_delete()
 
 void clean_exit()
 {
-    // // Free allocated memory
-    // free_flights(flights_global);
-    // free_passengers(passengers_global);
+    // Free allocated memory?
+    // Still thinking of a way to do this
+    // On modern OSes, exit() allows the OS to reclaim memory from the process
+    // It is still good practice to free allocated memory
 
     // Exit with failure status
     exit(EXIT_FAILURE);
@@ -411,7 +407,7 @@ bool valid_day(int day, char *month, int year)
             return day >= 1 && day <= 28; // Check if the day is in the range [1,28]
         }
     }
-    // Check if the month is April, June, Septemberm or November
+    // Check if the month is April, June, September, or November
     else if (strcmp(month, "April") == 0 || strcmp(month, "June") == 0 ||
              strcmp(month, "September") == 0 || strcmp(month, "November") == 0)
     {
@@ -449,6 +445,11 @@ bool valid_string(char *string)
 
 bool validate_id(char *id)
 {
+    // Check if the id is empty
+    if (strlen(id) == 0)
+    {
+        return false;
+    }
     // Check if the id exceeds the maximum length FLIGHT_ID_LEN
     if (strlen(id) > FLIGHT_ID_LEN)
     {
@@ -1137,8 +1138,8 @@ int count_reservations(Reservation *head)
 
 void add_flight(Flight **head)
 {
-    char *flight_id = NULL;       // Holds the input flight_id
-    bool string_is_valid = false; // Bool for validation
+    char *flight_id = NULL;                              // Holds the input flight_id
+    bool string_is_valid = false, dest_is_origin = true; // Bools for validation
 
     printf("== Add Flight =============================\n\n");
 
@@ -1147,7 +1148,7 @@ void add_flight(Flight **head)
     flight_id = get_string(stdin);
     if (!validate_id(flight_id))
     {
-        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
         free(flight_id);
         return;
     }
@@ -1173,6 +1174,10 @@ void add_flight(Flight **head)
         printf("Origin     : ");
         new_flight->origin = get_string(stdin);
         string_is_valid = valid_string(new_flight->origin);
+        if (!string_is_valid)
+        {
+            printf("[Error] Origin cannot be empty.\n");
+        }
     } while (!string_is_valid);
 
     // Ask for Destination
@@ -1186,7 +1191,15 @@ void add_flight(Flight **head)
         printf("Destination: ");
         new_flight->destination = get_string(stdin);
         string_is_valid = valid_string(new_flight->destination);
-    } while (!string_is_valid);
+        if (!string_is_valid)
+        {
+            printf("[Error] Destination cannot be empty.\n");
+        }
+        if (dest_is_origin = (strcmp(new_flight->destination, new_flight->origin) == 0))
+        {
+            printf("[Error] Destination cannot be the same as the origin.\n");
+        }
+    } while (!string_is_valid || dest_is_origin);
 
     // Ask for Departure DateTime
     printf("\n-- Departure -------------------------\n\n");
@@ -1242,7 +1255,7 @@ void edit_flight(Flight *head)
     printf("\n");
     if (!validate_id(flight_id))
     {
-        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
         return;
     }
     if ((f_ptr = search_flight_node(head, flight_id)) == NULL)
@@ -1313,7 +1326,7 @@ void view_flights(Flight *head, int mode)
         printf("\n");
         if (!validate_id(flight_id))
         {
-            printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
+            printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
             free(flight_id);
             return;
         }
@@ -1555,7 +1568,7 @@ void delete_flight(Flight **head)
     printf("\n");
     if (!validate_id(flight_id))
     {
-        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
         return;
     }
     if ((ptr = search_flight_node(*head, flight_id)) == NULL)
@@ -1603,6 +1616,10 @@ void add_passenger(Passenger **head)
         printf("First Name: ");
         first_name = get_string(stdin);
         string_is_valid = valid_string(first_name);
+        if (!string_is_valid)
+        {
+            printf("[Error] First name cannot be empty.\n");
+        }
     } while (!string_is_valid);
     do
     {
@@ -1614,6 +1631,10 @@ void add_passenger(Passenger **head)
         printf("Last Name : ");
         last_name = get_string(stdin);
         string_is_valid = valid_string(last_name);
+        if (!string_is_valid)
+        {
+            printf("[Error] Last name cannot be empty.\n");
+        }
     } while (!string_is_valid);
 
     // Ask for Birthdate
@@ -1760,7 +1781,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     printf("\n");
     if (!validate_id(flight_id))
     {
-        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
         free(flight_id);
         return;
     }
@@ -1878,7 +1899,7 @@ void remove_reservation(Flight *f_head, Passenger *p_head)
     printf("\n");
     if (!validate_id(flight_id))
     {
-        printf("[Error] A valid Flight ID has at most 6 uppercase letters and/or digits only.\n\n");
+        printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
         free(flight_id);
         return;
     }
@@ -1985,10 +2006,16 @@ void load(Flight **f_head, Passenger **p_head)
     if (fp == NULL) // If the file does not exist
     {
         printf("== Load ==============================\n\n");
-        printf("First time running the program.\nCreated 'flights.txt'.\n\n");
+        printf("File 'flights.txt' not found, attempting to create.\n\n");
         fp = fopen(FLIGHTS_FILE, "w"); // Create the file
-        fclose(fp);                    // Close the file
-        return;                        // Stop loading
+        if (fp == NULL)                // If fopen failed
+        {
+            printf("[Error] Critical error. Can't open file.\n\n");
+            clean_exit();
+        }
+        printf("Created 'flights.txt'.\n\n");
+        fclose(fp); // Close the file
+        return;     // Stop loading
     }
 
     fscanf(fp, "%d\n", &flight_count); // Read the flight count
@@ -2025,10 +2052,16 @@ void load(Flight **f_head, Passenger **p_head)
     fp = fopen(PASSENGERS_FILE, "r");
     if (fp == NULL) // If the file does not exist
     {
-        printf("Created 'passengers.txt'.\n\n");
+        printf("File 'passengers.txt' not found, attempting to create.\n\n");
         fp = fopen(FLIGHTS_FILE, "w"); // Create the file
-        fclose(fp);                    // Close the file
-        return;                        // Stop loading
+        if (fp == NULL)                // If fopen failed
+        {
+            printf("[Error] Critical error. Can't open file.\n\n");
+            clean_exit();
+        }
+        fclose(fp); // Close the file
+        printf("Created 'passengers.txt'.\n\n");
+        return; // Stop loading
     }
 
     fscanf(fp, "%d\n", &passenger_count); // Read the passenger count
