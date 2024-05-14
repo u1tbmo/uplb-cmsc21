@@ -2005,56 +2005,55 @@ void load(Flight **f_head, Passenger **p_head)
     FILE *fp = fopen(FLIGHTS_FILE, "r");
     if (fp == NULL) // If the file does not exist
     {
-        printf("== Load ==============================\n\n");
-        printf("File 'flights.txt' not found, attempting to create.\n\n");
+        printf("== Load ===================================\n\n");
+        printf("File 'flights.txt' not found, attempting to create.\n");
         fp = fopen(FLIGHTS_FILE, "w"); // Create the file
         if (fp == NULL)                // If fopen failed
         {
             printf("[Error] Critical error. Can't open file.\n\n");
             clean_exit();
         }
-        printf("Created 'flights.txt'.\n\n");
+        printf("Created 'flights.txt'.\n");
         fclose(fp); // Close the file
-        return;     // Stop loading
     }
-
-    fscanf(fp, "%d\n", &flight_count); // Read the flight count
-    if (flight_count == 0)             // If there are no flights
+    else
     {
-        return; // Stop loading
+        fscanf(fp, "%d\n", &flight_count); // Read the flight count
+        if (flight_count != 0)             // If there are flights
+        {
+            while (!feof(fp)) // While there are flights to read
+            {
+                // Create a Flight node
+                Flight *f_temp = create_flight_node();
+
+                // Scan each field from the file
+                f_temp->flight_id = get_string(fp);
+                f_temp->origin = get_string(fp);
+                f_temp->destination = get_string(fp);
+                fscanf(fp, "%d %s %d - %d:%d\n",
+                       &f_temp->departure.date.day, f_temp->departure.date.month, &f_temp->departure.date.year,
+                       &f_temp->departure.time.hours, &f_temp->departure.time.minutes);
+                fscanf(fp, "%d %s %d - %d:%d\n",
+                       &f_temp->arrival.date.day, f_temp->arrival.date.month, &f_temp->arrival.date.year,
+                       &f_temp->arrival.time.hours, &f_temp->arrival.time.minutes);
+                fscanf(fp, "%d\n", &f_temp->passenger_qty);
+                fscanf(fp, "%d\n", &f_temp->passenger_max);
+                fscanf(fp, "%d\n", &f_temp->bonus_miles);
+
+                // Insert the Flight to the Linked List
+                insert_flight_node(&(*f_head), f_temp);
+            }
+        }
+        fclose(fp); // Close the file
     }
-
-    while (!feof(fp)) // While there are flights to read
-    {
-        // Create a Flight node
-        Flight *f_temp = create_flight_node();
-
-        // Scan each field from the file
-        f_temp->flight_id = get_string(fp);
-        f_temp->origin = get_string(fp);
-        f_temp->destination = get_string(fp);
-        fscanf(fp, "%d %s %d - %d:%d\n",
-               &f_temp->departure.date.day, f_temp->departure.date.month, &f_temp->departure.date.year,
-               &f_temp->departure.time.hours, &f_temp->departure.time.minutes);
-        fscanf(fp, "%d %s %d - %d:%d\n",
-               &f_temp->arrival.date.day, f_temp->arrival.date.month, &f_temp->arrival.date.year,
-               &f_temp->arrival.time.hours, &f_temp->arrival.time.minutes);
-        fscanf(fp, "%d\n", &f_temp->passenger_qty);
-        fscanf(fp, "%d\n", &f_temp->passenger_max);
-        fscanf(fp, "%d\n", &f_temp->bonus_miles);
-
-        // Insert the Flight to the Linked List
-        insert_flight_node(&(*f_head), f_temp);
-    }
-    fclose(fp); // Close the file
 
     // Load Passengers
     fp = fopen(PASSENGERS_FILE, "r");
     if (fp == NULL) // If the file does not exist
     {
-        printf("File 'passengers.txt' not found, attempting to create.\n\n");
-        fp = fopen(FLIGHTS_FILE, "w"); // Create the file
-        if (fp == NULL)                // If fopen failed
+        printf("File 'passengers.txt' not found, attempting to create.\n");
+        fp = fopen(PASSENGERS_FILE, "w"); // Create the file
+        if (fp == NULL)                   // If fopen failed
         {
             printf("[Error] Critical error. Can't open file.\n\n");
             clean_exit();
@@ -2063,52 +2062,52 @@ void load(Flight **f_head, Passenger **p_head)
         printf("Created 'passengers.txt'.\n\n");
         return; // Stop loading
     }
-
-    fscanf(fp, "%d\n", &passenger_count); // Read the passenger count
-    if (passenger_count == 0)             // If there are no passengers
+    else
     {
-        return; // Stop loading
-    }
-
-    while (!feof(fp)) // While there are passengers to read
-    {
-        // Create a Passenger node
-        Passenger *p_temp = create_passenger_node();
-
-        // Scan each field from the file
-        p_temp->last_name = get_string(fp);
-        p_temp->first_name = get_string(fp);
-        p_temp->passport_number = get_string(fp);
-        fscanf(fp, "%d %s %d\n",
-               &p_temp->birthdate.day, p_temp->birthdate.month, &p_temp->birthdate.year);
-        fscanf(fp, "%d\n", &p_temp->reservation_qty);
-        for (int i = 0; i < p_temp->reservation_qty; i++)
+        fscanf(fp, "%d\n", &passenger_count); // Read the passenger count
+        if (passenger_count != 0)             // If there are passengers
         {
-            // Get the Flight ID
-            char *flight_id = get_string(fp);
-
-            // Search for the flight
-            reserved_flight = search_flight_node(*f_head, flight_id);
-            if (reserved_flight == NULL)
+            while (!feof(fp)) // While there are passengers to read
             {
-                printf("[Error] Critical error. Flight missing from flights.txt file.\nCannot continue.\n");
-                printf("[Info] Please do not edit the files manually.\n\n");
-                clean_exit();
+                // Create a Passenger node
+                Passenger *p_temp = create_passenger_node();
+
+                // Scan each field from the file
+                p_temp->last_name = get_string(fp);
+                p_temp->first_name = get_string(fp);
+                p_temp->passport_number = get_string(fp);
+                fscanf(fp, "%d %s %d\n",
+                       &p_temp->birthdate.day, p_temp->birthdate.month, &p_temp->birthdate.year);
+                fscanf(fp, "%d\n", &p_temp->reservation_qty);
+                for (int i = 0; i < p_temp->reservation_qty; i++)
+                {
+                    // Get the Flight ID
+                    char *flight_id = get_string(fp);
+
+                    // Search for the flight
+                    reserved_flight = search_flight_node(*f_head, flight_id);
+                    if (reserved_flight == NULL)
+                    {
+                        printf("[Error] Critical error. Flight missing from flights.txt file.\nCannot continue.\n");
+                        printf("[Info] Please do not edit the files manually.\n\n");
+                        clean_exit();
+                    }
+
+                    free(flight_id); // Free the string
+
+                    // Create a Reservation node
+                    r_ptr = create_reservation_node(reserved_flight);
+                    // Insert the Reservation node to the passenger's reservations linked list
+                    insert_reservation_node(&p_temp->reservations, r_ptr);
+                }
+                fscanf(fp, "%d\n", &p_temp->miles);
+
+                // Insert to the Passengers linked list
+                insert_passenger_node(&(*p_head), p_temp);
             }
-
-            free(flight_id); // Free the string
-
-            // Create a Reservation node
-            r_ptr = create_reservation_node(reserved_flight);
-            // Insert the Reservation node to the passenger's reservations linked list
-            insert_reservation_node(&p_temp->reservations, r_ptr);
         }
-        fscanf(fp, "%d\n", &p_temp->miles);
-
-        // Insert to the Passengers linked list
-        insert_passenger_node(&(*p_head), p_temp);
+        fclose(fp); // Close the file
     }
-    fclose(fp); // Close the file
 }
 
 void save(Flight *f_head, Passenger *p_head)
