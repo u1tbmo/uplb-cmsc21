@@ -163,14 +163,14 @@ void view_reservations(Passenger *p_head);                  // Views all reserva
 void load(Flight **f_head, Passenger **p_head); // Load flights and passengers
 void save(Flight *f_head, Passenger *p_head);   // Save flights and passengers
 
+// Global Linked Lists
+Flight *flights = NULL;
+Passenger *passengers = NULL;
+
 int main()
 {
     // Variables
     int choice, view_choice;
-
-    // Linked Lists
-    Flight *flights = NULL;
-    Passenger *passengers = NULL;
 
     // Load Flights and Passengers from files
     load(&flights, &passengers);
@@ -333,10 +333,9 @@ bool confirm_delete()
 
 void clean_exit()
 {
-    // Free allocated memory?
-    // Still thinking of a way to do this
-    // On modern OSes, exit() allows the OS to reclaim memory from the process
-    // It is still good practice to free allocated memory
+    // Free allocated memory
+    free_flights(flights);
+    free_passengers(passengers);
 
     // Exit with failure status
     exit(EXIT_FAILURE);
@@ -592,12 +591,17 @@ char *get_string(FILE *stream)
         // If we've reached the end of the buffer, reallocate more memory
         if (i == buffer_length)
         {
-            buffer_length *= 2;                                             // Increase size of buffer
-            buffer = (char *)realloc(buffer, sizeof(char) * buffer_length); // Reallocate memory
-            if (buffer == NULL)                                             // If realloc failed.
+            buffer_length *= 2;                                           // Increase size of buffer
+            temp = (char *)realloc(buffer, sizeof(char) * buffer_length); // Reallocate memory
+            if (temp == NULL)                                             // If realloc failed.
             {
                 printf("[Error] Memory allocation failed.\n\n");
+                free(buffer);
                 clean_exit();
+            }
+            else
+            {
+                buffer = temp;
             }
         }
     }
@@ -1260,11 +1264,13 @@ void edit_flight(Flight *head)
     if (!validate_id(flight_id))
     {
         printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
+        free(flight_id);
         return;
     }
     if ((f_ptr = search_flight_node(head, flight_id)) == NULL)
     {
         printf("[Error] That Flight does not exist.\n\n");
+        free(flight_id);
         return;
     }
     free(flight_id);
@@ -1573,11 +1579,13 @@ void delete_flight(Flight **head)
     if (!validate_id(flight_id))
     {
         printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
+        free(flight_id);
         return;
     }
     if ((ptr = search_flight_node(*head, flight_id)) == NULL)
     {
         printf("[Error] That Flight does not exist.\n\n");
+        free(flight_id);
         return;
     }
     if (ptr->passenger_qty != 0)
@@ -1767,11 +1775,13 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     if (!validate_passport(passport_number))
     {
         printf("[Error] A valid Passport Number has 9 uppercase letters and/or digits.\n\n");
+        free(passport_number);
         return;
     }
     if ((passenger = search_passenger_node(p_head, passport_number)) == NULL)
     {
         printf("[Error] That passenger does not exist.\n\n");
+        free(passport_number);
         return;
     }
     free(passport_number);
@@ -2094,6 +2104,7 @@ void load(Flight **f_head, Passenger **p_head)
                     {
                         printf("[Error] Critical error. Flight missing from flights.txt file.\nCannot continue.\n");
                         printf("[Info] Please do not edit the files manually.\n\n");
+                        free_passenger_node(p_temp);
                         clean_exit();
                     }
 
