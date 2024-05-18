@@ -1,3 +1,7 @@
+/*  Tabamo, Euan Jed S. - ST2L - May 14, 2024
+    Final Project
+*/
+
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
