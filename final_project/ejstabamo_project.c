@@ -1707,14 +1707,13 @@ void add_passenger(Passenger **head)
             free(passport_number);
         }
         passport_number = get_string("Passport Number: ", stdin);
-        printf("\n");
         if (!(passport_is_valid = validate_passport(passport_number)))
         {
-            printf(RED "[Error] A valid passport number has 9 uppercase letters and/or digits.\n" RST);
+            printf(RED "\n[Error] A valid passport number has 9 uppercase letters and/or digits.\n" RST);
         }
         if (search_passenger_node(*head, passport_number) != NULL)
         {
-            printf(RED "[Error] Passenger with that passport number already exists.\n\n" RST);
+            printf(RED "\n[Error] Passenger with that passport number already exists.\n\n" RST);
             free(first_name);
             free(last_name);
             free(passport_number);
