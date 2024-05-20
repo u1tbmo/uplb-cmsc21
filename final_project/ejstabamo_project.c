@@ -10,14 +10,11 @@
 
 // ANSI Color Codes - https://gist.github.com/RabaDabaDoba/145049536f815903c79944599c6f952a
 
-#define BLK "\e[0;90m"
 #define RED "\e[0;91m"
 #define GRN "\e[0;92m"
 #define YEL "\e[0;93m"
 #define BLU "\e[0;94m"
-#define MAG "\e[0;95m"
-#define CYN "\e[0;96m"
-#define WHT "\e[0;97m"
+#define BCYN "\e[1;36m"
 #define RST "\e[0m"
 
 // Global Constants
@@ -306,7 +303,7 @@ int main_menu()
 {
     int choice;
 
-    printf(CYN "================== Menu ===================\n" RST);
+    printf(BCYN "================== Menu ===================\n" RST);
     printf("1 | Add Flight\n");
     printf("2 | Edit Flight\n");
     printf("3 | View Flights\n");
@@ -1205,7 +1202,7 @@ void add_flight(Flight **head)
     char *flight_id = NULL;                              // Holds the input flight_id
     bool string_is_valid = false, dest_is_origin = true; // Bools for validation
 
-    printf(CYN "== Add Flight =============================\n\n" RST);
+    printf(BCYN "== Add Flight =============================\n\n" RST);
 
     // Ask for Flight ID and validate
     flight_id = get_string("Flight ID:   ", stdin);
@@ -1263,15 +1260,15 @@ void add_flight(Flight **head)
     } while (!string_is_valid || dest_is_origin);
 
     // Ask for Departure DateTime
-    new_flight->departure = get_datetime(CYN "-- Departure -------------------------" RST, false, NULL);
+    new_flight->departure = get_datetime(BCYN "-- Departure -------------------------" RST, false, NULL);
 
     // Ask for Arrival DateTime
-    new_flight->arrival = get_datetime(CYN "-- Arrival ---------------------------" RST, true, &new_flight->departure);
+    new_flight->arrival = get_datetime(BCYN "-- Arrival ---------------------------" RST, true, &new_flight->departure);
 
     // Number of Booked Passengers is already set to 0
 
     // Ask for Max Count of Passengers (Seats)
-    printf(CYN "\n--------------------------------------\n" RST);
+    printf(BCYN "\n--------------------------------------\n" RST);
     do
     {
         new_flight->passenger_max = get_int("Max Seats:   ");
@@ -1303,7 +1300,7 @@ void edit_flight(Flight **head)
     char *flight_id;      // Holds the input flight_id
     Flight *f_ptr = NULL; // A pointer to the Flight to delete
 
-    printf(CYN "== Edit Flight ============================\n\n" RST);
+    printf(BCYN "== Edit Flight ============================\n\n" RST);
 
     // Print flights (in linear form)
     view_flights_linear(*head, 3);
@@ -1325,13 +1322,13 @@ void edit_flight(Flight **head)
     free(flight_id);
 
     // New Departure DateTime
-    f_ptr->departure = get_datetime(CYN "-- Departure -------------------------" RST, false, NULL);
+    f_ptr->departure = get_datetime(BCYN "-- Departure -------------------------" RST, false, NULL);
 
     // New Arrival DateTime
-    f_ptr->arrival = get_datetime(CYN "-- Arrival ---------------------------" RST, true, &f_ptr->departure);
+    f_ptr->arrival = get_datetime(BCYN "-- Arrival ---------------------------" RST, true, &f_ptr->departure);
 
     // New Max Passengers (Seats)
-    printf(CYN "\n--------------------------------------\n\n" RST);
+    printf(BCYN "\n--------------------------------------\n\n" RST);
     do
     {
         f_ptr->passenger_max = get_int("Max Seats: ");
@@ -1354,7 +1351,7 @@ int view_flights_menu()
 {
     int choice;
 
-    printf(CYN "============== View Flights ===============\n" RST);
+    printf(BCYN "============== View Flights ===============\n" RST);
     printf("1 | View Specific Flight\n");
     printf("2 | View All Available Flights\n");
     printf("3 | View All Fully-booked Flights\n");
@@ -1374,7 +1371,7 @@ void view_flights(Flight *head, int mode)
     switch (mode)
     {
     case 1: // Mode 1: View Specific Flight
-        printf(CYN "-- View Flights > Specific -----------\n\n" RST);
+        printf(BCYN "-- View Flights > Specific -----------\n\n" RST);
 
         // Print flights (in linear form)
         view_flights_linear(head, 3);
@@ -1396,8 +1393,8 @@ void view_flights(Flight *head, int mode)
         }
         free(flight_id);
 
-        printf("Flight ID: %s\n", ptr->flight_id);
-        printf("Flight:    %s to %s\n", ptr->origin, ptr->destination);
+        printf(YEL "Flight ID: %s\n" RST, ptr->flight_id);
+        printf(YEL "Flight:    %s to %s\n" RST, ptr->origin, ptr->destination);
         printf("- Departure: %d %s %d - %02d:%02d\n",
                ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
                ptr->departure.time.hours, ptr->departure.time.minutes);
@@ -1411,15 +1408,15 @@ void view_flights(Flight *head, int mode)
 
         break;
     case 2: // Mode 2: View Available Flights
-        printf(CYN "-- View Flights > Available ----------\n\n" RST);
+        printf(BCYN "-- View Flights > Available ----------\n\n" RST);
         // Traverse the linked list
         while (ptr != NULL)
         {
             // Print the flight if the flight can still be booked
             if (ptr->passenger_qty < ptr->passenger_max)
             {
-                printf("Flight ID: %s\n", ptr->flight_id);
-                printf("Flight:    %s to %s\n", ptr->origin, ptr->destination);
+                printf(YEL "Flight ID: %s\n" RST, ptr->flight_id);
+                printf(YEL "Flight:    %s to %s\n" RST, ptr->origin, ptr->destination);
                 printf("- Departure: %d %s %d - %02d:%02d\n",
                        ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
                        ptr->departure.time.hours, ptr->departure.time.minutes);
@@ -1442,15 +1439,15 @@ void view_flights(Flight *head, int mode)
         }
         break;
     case 3: // Mode 3: View Full Flights
-        printf(CYN "-- View Flights > Fully-Booked -------\n\n" RST);
+        printf(BCYN "-- View Flights > Fully-Booked -------\n\n" RST);
         // Traverse the linked list
         while (ptr != NULL)
         {
             // Print the flight if fully booked
             if (ptr->passenger_qty == ptr->passenger_max)
             {
-                printf("Flight ID: %s\n", ptr->flight_id);
-                printf("Flight:    %s to %s\n", ptr->origin, ptr->destination);
+                printf(YEL "Flight ID: %s\n" RST, ptr->flight_id);
+                printf(YEL "Flight:    %s to %s\n" RST, ptr->origin, ptr->destination);
                 printf("- Departure: %d %s %d - %02d:%02d\n",
                        ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
                        ptr->departure.time.hours, ptr->departure.time.minutes);
@@ -1473,12 +1470,12 @@ void view_flights(Flight *head, int mode)
         }
         break;
     case 4: // Mode 4: View All Flights
-        printf(CYN "-- View Flights > All ----------------\n\n" RST);
+        printf(BCYN "-- View Flights > All ----------------\n\n" RST);
         // Traverse the linked list and print each flight
         while (ptr != NULL)
         {
-            printf("Flight ID: %s\n", ptr->flight_id);
-            printf("Flight:    %s to %s\n", ptr->origin, ptr->destination);
+            printf(YEL "Flight ID: %s\n" RST, ptr->flight_id);
+            printf(YEL "Flight:    %s to %s\n" RST, ptr->origin, ptr->destination);
             printf("- Departure: %d %s %d - %02d:%02d\n",
                    ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
                    ptr->departure.time.hours, ptr->departure.time.minutes);
@@ -1506,7 +1503,7 @@ bool view_flights_linear(Flight *head, int mode)
     switch (mode)
     {
     case 1: // Mode 1: Available Flights (for Booking)
-        printf(CYN "-- Available Flights -----------------\n\n" RST);
+        printf(BCYN "-- Available Flights -----------------\n\n" RST);
         while (ptr != NULL)
         {
             if (ptr->passenger_qty < ptr->passenger_max)
@@ -1523,7 +1520,7 @@ bool view_flights_linear(Flight *head, int mode)
         printf("\n");
         break;
     case 2: // Mode 2: Empty Flights (for Deleting)
-        printf(CYN "-- Empty Flights ---------------------\n\n" RST);
+        printf(BCYN "-- Empty Flights ---------------------\n\n" RST);
         while (ptr != NULL)
         {
             if (ptr->passenger_qty == 0)
@@ -1546,7 +1543,7 @@ bool view_flights_linear(Flight *head, int mode)
         printf("\n");
         break;
     case 3: // Mode 3: All Flights (for Viewing)
-        printf(CYN "-- All Flights -----------------------\n\n" RST);
+        printf(BCYN "-- All Flights -----------------------\n\n" RST);
         while (ptr != NULL)
         {
             printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
@@ -1571,7 +1568,7 @@ void view_passengers_linear(Passenger *head)
     // Start from the head
     Passenger *ptr = head;
 
-    printf(CYN "-- Passengers ------------------------\n\n" RST);
+    printf(BCYN "-- Passengers ------------------------\n\n" RST);
 
     // Traverse the linked list and print each Passenger
     while (ptr != NULL)
@@ -1590,7 +1587,7 @@ void view_reservations_linear(Reservation *head)
     Reservation *ptr = head;
     Flight *f_ptr = NULL; // Pointer to the Reservation's Flight
 
-    printf(CYN "-- Reservations ----------------------\n\n" RST);
+    printf(BCYN "-- Reservations ----------------------\n\n" RST);
     // Traverse the linked list and print each Reservation
     while (ptr != NULL)
     {
@@ -1611,7 +1608,7 @@ void delete_flight(Flight **head)
     Flight *ptr; // Pointer to the Flight to delete
     bool empty_flights_exists;
 
-    printf(CYN "== Delete Flight ==========================\n\n" RST);
+    printf(BCYN "== Delete Flight ==========================\n\n" RST);
 
     // Print flights (in linear form)
     empty_flights_exists = view_flights_linear(*head, 2);
@@ -1656,7 +1653,7 @@ void delete_flight(Flight **head)
 
 void add_passenger(Passenger **head)
 {
-    printf(CYN "== Add Passenger ==========================\n\n" RST);
+    printf(BCYN "== Add Passenger ==========================\n\n" RST);
 
     char *first_name = NULL;                                 // Input string
     char *last_name = NULL;                                  // Input string
@@ -1695,8 +1692,8 @@ void add_passenger(Passenger **head)
     } while (!string_is_valid);
 
     // Ask for Birthdate
-    birthdate = get_date(CYN "-- Date of Birth ---------------------" RST);
-    printf(CYN "\n--------------------------------------\n\n" RST);
+    birthdate = get_date(BCYN "-- Date of Birth ---------------------" RST);
+    printf(BCYN "\n--------------------------------------\n\n" RST);
 
     // Ask for Passport Number and validate
     do
@@ -1749,7 +1746,7 @@ void edit_passenger(Passenger *head)
 {
     bool string_is_valid = false; // Bool for validation
 
-    printf(CYN "== Edit Passenger =========================\n\n" RST);
+    printf(BCYN "== Edit Passenger =========================\n\n" RST);
 
     // Print passengers (in linear form)
     view_passengers_linear(head);
@@ -1786,8 +1783,8 @@ void edit_passenger(Passenger *head)
     } while (!string_is_valid);
 
     // New Birthdate
-    p_ptr->birthdate = get_date(CYN "-- Date of Birth ---------------------" RST);
-    printf(CYN "\n--------------------------------------\n" RST);
+    p_ptr->birthdate = get_date(BCYN "-- Date of Birth ---------------------" RST);
+    printf(BCYN "\n--------------------------------------\n" RST);
 
     printf(GRN "\n[Success] Edited Passenger %s.\n\n" RST, p_ptr->first_name);
 }
@@ -1802,7 +1799,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     DateTime *d_ptr = NULL, *a_ptr = NULL; // Pointer to a Reservation's DateTimes
     char *passport_number, *flight_id;
 
-    printf(CYN "== Book Reservation =======================\n\n" RST);
+    printf(BCYN "== Book Reservation =======================\n\n" RST);
 
     // Print passengers (in linear form)
     view_passengers_linear(p_head);
@@ -1912,7 +1909,7 @@ void remove_reservation(Flight *f_head, Passenger *p_head)
     Flight *flight = NULL;             // Pointer to a Flight
     Reservation *r_ptr = NULL;         // Pointer to the Reservation to Delete
 
-    printf(CYN "== Remove Reservation =====================\n\n" RST);
+    printf(BCYN "== Remove Reservation =====================\n\n" RST);
 
     // Print passengers (in linear form)
     view_passengers_linear(p_head);
@@ -1991,7 +1988,7 @@ void view_reservations(Passenger *head)
     Flight *f_ptr = NULL;      // Pointer to a Flight
     Reservation *r_ptr = NULL; // Pointer to a Reservation
 
-    printf(CYN "== View Reservations ======================\n\n" RST);
+    printf(BCYN "== View Reservations ======================\n\n" RST);
 
     // Print passengers (in linear form)
     view_passengers_linear(head);
@@ -2019,7 +2016,7 @@ void view_reservations(Passenger *head)
     }
     free(passport_number);
 
-    printf(CYN "-- Reservations ----------------------\n\n" RST);
+    printf(BCYN "-- Reservations ----------------------\n\n" RST);
 
     // Start from the head of the passenger's reservation linked list
     r_ptr = p_ptr->reservations;
@@ -2027,8 +2024,8 @@ void view_reservations(Passenger *head)
     while (r_ptr != NULL)
     {
         f_ptr = r_ptr->flight;
-        printf("Flight ID: %s\n", f_ptr->flight_id);
-        printf("Flight:    %s to %s\n", f_ptr->origin, f_ptr->destination);
+        printf(YEL "Flight ID: %s\n" RST, f_ptr->flight_id);
+        printf(YEL "Flight:    %s to %s\n" RST, f_ptr->origin, f_ptr->destination);
         printf("- Departure: %d %s %d - %02d:%02d\n",
                f_ptr->departure.date.day, f_ptr->departure.date.month, f_ptr->departure.date.year,
                f_ptr->departure.time.hours, f_ptr->departure.time.minutes);
@@ -2053,7 +2050,7 @@ void load(Flight **f_head, Passenger **p_head)
     FILE *fp = fopen(FLIGHTS_FILE, "r");
     if (fp == NULL) // If the file does not exist
     {
-        printf(CYN "== Load ===================================\n\n" RST);
+        printf(BCYN "== Load ===================================\n\n" RST);
         printf("File 'flights.txt' not found, attempting to create.\n");
         fp = fopen(FLIGHTS_FILE, "w"); // Create the file
         if (fp == NULL)                // If fopen failed
