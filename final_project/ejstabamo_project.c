@@ -137,6 +137,7 @@ void free_reservations(Reservation *head); // Frees all memory allocated for the
 Flight *create_flight_node();                              // Creates a Flight node
 Flight *search_flight_node(Flight *head, char *flight_id); // Searches for a Flight in the linked list and returns a pointer to it
 void insert_flight_node(Flight **head, Flight *node);      // Insert a Flight to the linked list considering order
+void reinsert_flight_node(Flight **head, Flight *node);    // Reinserts a Flight to the linked list (ensures order of data is maintained after editing a node)
 void delete_flight_node(Flight **head, char *flight_id);   // Deletes a Flight from the linked list
 int count_flights(Flight *head);                           // Counts the number of Flights in the linked list
 
@@ -158,7 +159,7 @@ int count_reservations(Reservation *head);                               // Coun
 // Program Functionality
 
 void add_flight(Flight **head);                             // Adds a Flight to the database
-void edit_flight(Flight *head);                             // Edits a Flight in the database
+void edit_flight(Flight **head);                            // Edits a Flight in the database
 int view_flights_menu();                                    // Prints the menu for viewing flights and returns an integer
 void view_flights(Flight *head, int mode);                  // Views flights in the database
 bool view_flights_linear(Flight *head, int mode);           // Views flights in the database (linear format), returns false if no flights are empty for mode 2
@@ -203,7 +204,7 @@ int main()
                 printf(BLU "[Info] There are currently no flights.\n\n" RST);
                 break;
             }
-            edit_flight(flights);
+            edit_flight(&flights);
             break;
         case 3: // View Flights
             if (flights == NULL)
@@ -931,6 +932,33 @@ void insert_flight_node(Flight **head, Flight *node)
     }
 }
 
+void reinsert_flight_node(Flight **head, Flight *node)
+{
+    // Start from the head
+    Flight *prev = *head;
+    Flight *curr = *head; // The node that will be reinserted
+
+    // If the node to delete is the head
+    if (*head == node)
+    {
+        curr = *head;
+        *head = (*head)->next;
+    }
+
+    // Find the node to delete
+    while (curr != node)
+    {
+        prev = curr;
+        curr = curr->next;
+    }
+
+    // Remove the node from the list
+    prev->next = curr->next;
+
+    // Reinsert the node
+    insert_flight_node(&(*head), node);
+}
+
 void delete_flight_node(Flight **head, char *flight_id)
 {
     // Start from the head
@@ -939,13 +967,6 @@ void delete_flight_node(Flight **head, char *flight_id)
 
     // Stores the node that will be deleted
     Flight *temp;
-
-    // If the Flight does not exist
-    if (search_flight_node(*head, flight_id) == NULL)
-    {
-        printf(RED "[Error] Flight does not exist.\n\n" RST);
-        return;
-    }
 
     // If the node to delete is the head
     if (strcmp((*head)->flight_id, flight_id) == 0)
@@ -958,11 +979,19 @@ void delete_flight_node(Flight **head, char *flight_id)
     }
 
     // Find the node to delete
-    while (strcmp(curr->flight_id, flight_id) != 0)
+    while (curr != NULL && strcmp(curr->flight_id, flight_id) != 0)
     {
         prev = curr;
         curr = curr->next;
     }
+
+    // If the node was not found
+    if (curr == NULL)
+    {
+        printf(RED "[Error] Flight does not exist.\n\n" RST);
+        return;
+    }
+
     prev->next = curr->next; // Remove the node from the list
     free_flight_node(curr);  // Free the deleted node
 }
@@ -1269,28 +1298,27 @@ void add_flight(Flight **head)
     printf(GRN "\n[Success] Added Flight %s.\n\n" RST, new_flight->flight_id);
 }
 
-void edit_flight(Flight *head)
+void edit_flight(Flight **head)
 {
     char *flight_id;      // Holds the input flight_id
-    Flight *f_ptr = NULL; // A pointer to the Flight to edit
+    Flight *f_ptr = NULL; // A pointer to the Flight to delete
 
     printf("== Edit Flight ============================\n\n");
 
     // Print flights (in linear form)
-    view_flights_linear(head, 3);
+    view_flights_linear(*head, 3);
 
     // Ask for a Flight ID and validate
     flight_id = get_string("Flight ID: ", stdin);
-    printf("\n");
     if (!validate_id(flight_id))
     {
-        printf(RED "[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n" RST);
+        printf(RED "\n[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n" RST);
         free(flight_id);
         return;
     }
-    if ((f_ptr = search_flight_node(head, flight_id)) == NULL)
+    if ((f_ptr = search_flight_node(*head, flight_id)) == NULL)
     {
-        printf(RED "[Error] That Flight does not exist.\n\n" RST);
+        printf(RED "\n[Error] That Flight does not exist.\n\n" RST);
         free(flight_id);
         return;
     }
@@ -1316,6 +1344,8 @@ void edit_flight(Flight *head)
             printf(RED "[Error] You cannot decrease maximum passengers below number of reserved passengers.\n" RST);
         }
     } while (f_ptr->passenger_max < MIN_PASSENGERS || f_ptr->passenger_max < f_ptr->passenger_qty);
+
+    reinsert_flight_node(&(*head), f_ptr);
 
     printf(GRN "\n[Success] Edited Flight %s.\n\n" RST, f_ptr->flight_id);
 }
