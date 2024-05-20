@@ -107,10 +107,10 @@ bool is_leap(int year);                                                         
 
 // Input Functions
 
-char *get_string(FILE *stream);                              // Gets a string from a file stream (with automatic dynamic memory allocation)
-int get_int(char *prompt);                                   // Gets an integer from the user
-Date get_date();                                             // Gets a date from the user
-DateTime get_datetime(bool is_arrival, DateTime *departure); // Gets DateTime from the user
+char *get_string(char *prompt, FILE *stream);                              // Prompts a user for a string or gets a string from a file (with automatic dynamic memory allocation)
+int get_int(char *prompt);                                                 // Prompts a user for an integer
+Date get_date(char *prompt);                                               // Prompts a user for a Date
+DateTime get_datetime(char *prompt, bool is_arrival, DateTime *departure); // Prompts a user for a DateTime
 
 // Memory Functions
 
@@ -314,8 +314,7 @@ bool confirm_delete()
     // Variable to hold user's input
     char *choice;
 
-    printf("Enter [Y] to confirm deletion: ");
-    choice = get_string(stdin);
+    choice = get_string("Enter [Y] to confirm deletion: ", stdin);
 
     // Check if the user only entered "Y"
     if (strcmp(choice, "Y") == 0)
@@ -569,11 +568,17 @@ bool is_leap(int year)
     return false;
 }
 
-char *get_string(FILE *stream)
+char *get_string(char *prompt, FILE *stream)
 {
     // Variables
     int buffer_length = INITIAL_BUFFER_LEN, c, i = 0;
     char *temp;
+
+    // Print prompt if there is a prompt
+    if (prompt != NULL)
+    {
+        printf("%s", prompt);
+    }
 
     // Allocate memory for a string
     char *buffer = (char *)malloc(sizeof(char) * buffer_length);
@@ -637,11 +642,10 @@ int get_int(char *prompt)
             free(input);
         }
         // Ask the user for a number in string form
-        printf("%s", prompt);
-        input = get_string(stdin);
+        input = get_string(prompt, stdin);
 
         // Convert the string to an integer
-        number = strtol(input, &endptr, 0);
+        number = strtol(input, &endptr, 10);
 
         // Check for invalid invalid input
         if (*endptr != '\0' || input[0] == '\n' || endptr == input)
@@ -654,11 +658,17 @@ int get_int(char *prompt)
     return number; // Return the integer
 }
 
-Date get_date()
+Date get_date(char *prompt)
 {
     Date new_date;                                     // Holds the new Date
     char *input, *endptr;                              // String input, endptr for strtol
     bool month_is_valid = false, day_is_valid = false; // Bools for validating inputs
+
+    // Print prompt if there is a prompt
+    if (prompt != NULL)
+    {
+        printf("\n%s\n\n", prompt);
+    }
 
     // Ask for a year
     do
@@ -673,8 +683,7 @@ Date get_date()
     // Ask for a month
     do
     {
-        printf("Month  : ");
-        input = get_string(stdin);
+        input = get_string("Month  : ", stdin);
         month_is_valid = valid_month(input);
         if (!month_is_valid)
         {
@@ -702,7 +711,7 @@ Date get_date()
     return new_date;
 }
 
-DateTime get_datetime(bool is_arrival, DateTime *departure)
+DateTime get_datetime(char *prompt, bool is_arrival, DateTime *departure)
 {
     Date new_date;                                         // Holds the new Date
     Time new_time;                                         // Holds the new Time
@@ -712,8 +721,14 @@ DateTime get_datetime(bool is_arrival, DateTime *departure)
 
     do
     {
+        // Print prompt if there is a prompt
+        if (prompt != NULL)
+        {
+            printf("\n%s\n\n", prompt);
+        }
+
         // Ask for a Date (Year, Month, Day)
-        new_date = get_date();
+        new_date = get_date(NULL);
 
         // Ask for hours
         do
@@ -745,7 +760,7 @@ DateTime get_datetime(bool is_arrival, DateTime *departure)
             arrival_is_future = is_future(*departure, new_datetime);
             if (!arrival_is_future)
             {
-                printf("[Error] Your arrival must be after the departure.\n");
+                printf("\n[Error] Your arrival must be after the departure.\n");
             }
         }
     } while (!arrival_is_future);
@@ -1152,8 +1167,7 @@ void add_flight(Flight **head)
     printf("== Add Flight =============================\n\n");
 
     // Ask for Flight ID and validate
-    printf("Flight ID  : ");
-    flight_id = get_string(stdin);
+    flight_id = get_string("Flight ID  : ", stdin);
     if (!validate_id(flight_id))
     {
         printf("[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n");
@@ -1179,8 +1193,7 @@ void add_flight(Flight **head)
         {
             free(new_flight->origin);
         }
-        printf("Origin     : ");
-        new_flight->origin = get_string(stdin);
+        new_flight->origin = get_string("Origin     : ", stdin);
         string_is_valid = valid_string(new_flight->origin);
         if (!string_is_valid)
         {
@@ -1196,8 +1209,7 @@ void add_flight(Flight **head)
         {
             free(new_flight->destination);
         }
-        printf("Destination: ");
-        new_flight->destination = get_string(stdin);
+        new_flight->destination = get_string("Destination: ", stdin);
         string_is_valid = valid_string(new_flight->destination);
         if (!string_is_valid)
         {
@@ -1210,12 +1222,10 @@ void add_flight(Flight **head)
     } while (!string_is_valid || dest_is_origin);
 
     // Ask for Departure DateTime
-    printf("\n-- Departure -------------------------\n\n");
-    new_flight->departure = get_datetime(false, NULL);
+    new_flight->departure = get_datetime("-- Departure -------------------------", false, NULL);
 
     // Ask for Arrival DateTime
-    printf("\n-- Arrival ---------------------------\n\n");
-    new_flight->arrival = get_datetime(true, &new_flight->departure);
+    new_flight->arrival = get_datetime("-- Arrival ---------------------------", true, &new_flight->departure);
 
     // Number of Booked Passengers is already set to 0
 
@@ -1258,8 +1268,7 @@ void edit_flight(Flight *head)
     view_flights_linear(head, 3);
 
     // Ask for a Flight ID and validate
-    printf("Flight ID: ");
-    flight_id = get_string(stdin);
+    flight_id = get_string("Flight ID: ", stdin);
     printf("\n");
     if (!validate_id(flight_id))
     {
@@ -1276,12 +1285,10 @@ void edit_flight(Flight *head)
     free(flight_id);
 
     // New Departure DateTime
-    printf("-- Departure -------------------------\n\n");
-    f_ptr->departure = get_datetime(false, NULL);
+    f_ptr->departure = get_datetime("-- Departure -------------------------", false, NULL);
 
     // New Arrival DateTime
-    printf("\n-- Arrival ---------------------------\n\n");
-    f_ptr->arrival = get_datetime(true, &f_ptr->departure);
+    f_ptr->arrival = get_datetime("-- Arrival ---------------------------", true, &f_ptr->departure);
 
     // New Max Passengers (Seats)
     printf("\n--------------------------------------\n\n");
@@ -1331,8 +1338,7 @@ void view_flights(Flight *head, int mode)
         view_flights_linear(head, 3);
 
         // Ask for a Flight ID and Validate
-        printf("Flight ID: ");
-        flight_id = get_string(stdin);
+        flight_id = get_string("Flight ID: ", stdin);
         printf("\n");
         if (!validate_id(flight_id))
         {
@@ -1573,8 +1579,7 @@ void delete_flight(Flight **head)
     }
 
     // Ask for a Flight ID and validate
-    printf("Flight ID: ");
-    char *flight_id = get_string(stdin);
+    char *flight_id = get_string("Flight ID: ", stdin);
     printf("\n");
     if (!validate_id(flight_id))
     {
@@ -1625,8 +1630,7 @@ void add_passenger(Passenger **head)
         {
             free(first_name);
         }
-        printf("First Name: ");
-        first_name = get_string(stdin);
+        first_name = get_string("First Name: ", stdin);
         string_is_valid = valid_string(first_name);
         if (!string_is_valid)
         {
@@ -1640,8 +1644,7 @@ void add_passenger(Passenger **head)
         {
             free(last_name);
         }
-        printf("Last Name : ");
-        last_name = get_string(stdin);
+        last_name = get_string("Last Name : ", stdin);
         string_is_valid = valid_string(last_name);
         if (!string_is_valid)
         {
@@ -1650,8 +1653,7 @@ void add_passenger(Passenger **head)
     } while (!string_is_valid);
 
     // Ask for Birthdate
-    printf("\n-- Date of Birth ---------------------\n\n");
-    birthdate = get_date();
+    birthdate = get_date("-- Date of Birth ---------------------");
     printf("\n--------------------------------------\n\n");
 
     // Ask for Passport Number and validate
@@ -1662,8 +1664,7 @@ void add_passenger(Passenger **head)
         {
             free(passport_number);
         }
-        printf("Passport Number: ");
-        passport_number = get_string(stdin);
+        passport_number = get_string("Passport Number: ", stdin);
         printf("\n");
         if (!(passport_is_valid = validate_passport(passport_number)))
         {
@@ -1716,8 +1717,7 @@ void edit_passenger(Passenger *head)
     Passenger *p_ptr = NULL; // Pointer to the Passenger to edit
 
     // Ask for a Passport Number and validate
-    printf("Passport Number: ");
-    passport_number = get_string(stdin);
+    passport_number = get_string("Passport Number: ", stdin);
     printf("\n");
     if (!validate_passport(passport_number))
     {
@@ -1740,14 +1740,12 @@ void edit_passenger(Passenger *head)
         {
             free(p_ptr->last_name);
         }
-        printf("Last Name: ");
-        p_ptr->last_name = get_string(stdin);
+        p_ptr->last_name = get_string("Last Name: ", stdin);
         string_is_valid = valid_string(p_ptr->last_name);
     } while (!string_is_valid);
 
     // New Birthdate
-    printf("\n-- Date of Birth ---------------------\n\n");
-    p_ptr->birthdate = get_date();
+    p_ptr->birthdate = get_date("-- Date of Birth ---------------------");
     printf("\n--------------------------------------\n");
 
     printf("\n[Success] Edited Passenger %s.\n\n", p_ptr->first_name);
@@ -1769,8 +1767,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     view_passengers_linear(p_head);
 
     // Ask for a Passport Number and validate
-    printf("Passport Number: ");
-    passport_number = get_string(stdin);
+    passport_number = get_string("Passport Number: ", stdin);
     printf("\n");
     if (!validate_passport(passport_number))
     {
@@ -1790,8 +1787,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     view_flights_linear(f_head, 1);
 
     // Ask for a Flight ID and validate
-    printf("Flight ID: ");
-    flight_id = get_string(stdin);
+    flight_id = get_string("Flight ID: ", stdin);
     printf("\n");
     if (!validate_id(flight_id))
     {
@@ -1881,8 +1877,7 @@ void remove_reservation(Flight *f_head, Passenger *p_head)
     view_passengers_linear(p_head);
 
     // Ask for a Passport Number and validate
-    printf("Passport Number: ");
-    passport_number = get_string(stdin);
+    passport_number = get_string("Passport Number: ", stdin);
     printf("\n");
     if (!validate_passport(passport_number))
     {
@@ -1908,8 +1903,7 @@ void remove_reservation(Flight *f_head, Passenger *p_head)
     view_reservations_linear(passenger->reservations);
 
     // Ask for a Flight ID and validate
-    printf("Flight ID: ");
-    flight_id = get_string(stdin);
+    flight_id = get_string("Flight ID: ", stdin);
     printf("\n");
     if (!validate_id(flight_id))
     {
@@ -1962,8 +1956,7 @@ void view_reservations(Passenger *head)
     view_passengers_linear(head);
 
     // Ask for a Passport Number and validate
-    printf("Passport Number: ");
-    passport_number = get_string(stdin);
+    passport_number = get_string("Passport Number: ", stdin);
     printf("\n");
     if (!validate_passport(passport_number))
     {
@@ -2041,9 +2034,9 @@ void load(Flight **f_head, Passenger **p_head)
                 Flight *f_temp = create_flight_node();
 
                 // Scan each field from the file
-                f_temp->flight_id = get_string(fp);
-                f_temp->origin = get_string(fp);
-                f_temp->destination = get_string(fp);
+                f_temp->flight_id = get_string(NULL, fp);
+                f_temp->origin = get_string(NULL, fp);
+                f_temp->destination = get_string(NULL, fp);
                 fscanf(fp, "%d %s %d - %d:%d\n",
                        &f_temp->departure.date.day, f_temp->departure.date.month, &f_temp->departure.date.year,
                        &f_temp->departure.time.hours, &f_temp->departure.time.minutes);
@@ -2087,16 +2080,16 @@ void load(Flight **f_head, Passenger **p_head)
                 Passenger *p_temp = create_passenger_node();
 
                 // Scan each field from the file
-                p_temp->last_name = get_string(fp);
-                p_temp->first_name = get_string(fp);
-                p_temp->passport_number = get_string(fp);
+                p_temp->last_name = get_string(NULL, fp);
+                p_temp->first_name = get_string(NULL, fp);
+                p_temp->passport_number = get_string(NULL, fp);
                 fscanf(fp, "%d %s %d\n",
                        &p_temp->birthdate.day, p_temp->birthdate.month, &p_temp->birthdate.year);
                 fscanf(fp, "%d\n", &p_temp->reservation_qty);
                 for (int i = 0; i < p_temp->reservation_qty; i++)
                 {
                     // Get the Flight ID
-                    char *flight_id = get_string(fp);
+                    char *flight_id = get_string(NULL, fp);
 
                     // Search for the flight
                     reserved_flight = search_flight_node(*f_head, flight_id);
