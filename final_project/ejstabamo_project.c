@@ -66,12 +66,14 @@ typedef struct Flight // A structure for a Flight with Flight details.
     int passenger_qty;
     int passenger_max;
     int bonus_miles;
+    struct Flight *prev;
     struct Flight *next;
 } Flight;
 
 typedef struct Reservation // A structure for a Reservation with a Flight.
 {
     struct Flight *flight;
+    struct Reservation *prev;
     struct Reservation *next;
 } Reservation;
 
@@ -84,15 +86,17 @@ typedef struct Passenger // A structure for a Passenger with passenger details.
     int miles;
     int reservation_qty;
     struct Reservation *reservations;
+    struct Passenger *prev;
     struct Passenger *next;
 } Passenger;
 
 // General Helper Functions
 
-int main_menu();            // Prints a menu and returns an integer
-bool confirm_delete();      // Asks the user if they are sure of deleting data
-void clean_exit();          // Cleanly exits the program when there is no more memory left
-void update_current_date(); // Updates the current date and time
+int main_menu();                   // Prints a menu and returns an integer
+bool confirm_delete();             // Asks the user if they are sure of deleting data
+void clean_exit();                 // Cleanly exits the program when there is no more memory left
+void update_current_datetime();    // Updates the current date and time
+void toupper_string(char *string); // Converts a string to uppercase
 
 // Comparison Helper Functions
 
@@ -198,16 +202,18 @@ int main()
     // Main Program Loop
     do
     {
-        choice = main_menu(); // Ask the user for a choice from the menu
-        // Set the current date every time user inputs a choice
-        update_current_date();
+        choice = main_menu();      // Ask the user for a choice from the menu
+        update_current_datetime(); // Set the current date every time user inputs a choice
         printf("\n");
         switch (choice)
         {
-        case 1: // Add Flight
+        // Add Flight
+        case 1:
             add_flight(&flights);
             break;
-        case 2: // Edit Flight
+
+        // Edit Flight
+        case 2:
             if (flights == NULL)
             {
                 printf(BLU "[Info] There are currently no flights.\n\n" RST);
@@ -215,7 +221,9 @@ int main()
             }
             edit_flight(&flights);
             break;
-        case 3: // View Flights
+
+        // View Flights
+        case 3:
             if (flights == NULL)
             {
                 printf(BLU "[Info] There are currently no flights.\n\n" RST);
@@ -241,7 +249,9 @@ int main()
                 }
             } while (view_choice != 0);
             break;
-        case 4: // Delete Flight
+
+        // Delete Flight
+        case 4:
             if (flights == NULL)
             {
                 printf(BLU "[Info] There are currently no flights.\n\n" RST);
@@ -249,9 +259,13 @@ int main()
             }
             delete_flight(&flights);
             break;
-        case 5: // Add Passenger
+
+        // Add Passenger
+        case 5:
             add_passenger(&passengers);
             break;
+
+        // Edit Passenger
         case 6:
             if (passengers == NULL)
             {
@@ -260,7 +274,9 @@ int main()
             }
             edit_passenger(passengers);
             break;
-        case 7: // Book Reservation
+
+        // Book Reservation
+        case 7:
             if (flights == NULL && passengers == NULL)
             {
                 printf(BLU "[Info] There are currently no flights and passengers.\n\n" RST);
@@ -278,7 +294,9 @@ int main()
             }
             book_reservation(flights, passengers);
             break;
-        case 8: // Remove Reservation
+
+        // Remove Reservation
+        case 8:
             if (passengers == NULL)
             {
                 printf(BLU "[Info] There are currently no passengers.\n\n" RST);
@@ -286,7 +304,9 @@ int main()
             }
             remove_reservation(flights, passengers);
             break;
-        case 9: // View Reservation
+
+        // View Reservation
+        case 9:
             if (passengers == NULL)
             {
                 printf(BLU "[Info] There are currently no passengers.\n\n" RST);
@@ -294,16 +314,21 @@ int main()
             }
             view_reservations(passengers);
             break;
+
+        // Exit
         case 0:
+            // Save Flights and Passengers to Files
+            save(flights, passengers);
+
             printf(YEL "Goodbye!\n\n" RST);
             break;
 
+        // Invalid Choice
         default:
+            printf(RED "[Error] Invalid choice.\n\n" RST);
             break;
         }
 
-        // Save Flights and Passengers to Files
-        save(flights, passengers);
     } while (choice != 0);
 
     // Free allocated memory
@@ -362,25 +387,41 @@ void clean_exit()
     exit(EXIT_FAILURE);
 }
 
-void update_current_date()
+void update_current_datetime()
 {
-    // Use time.h to get the DateTime
+    // Initialize a time_t variable with the current time and set the struct tm pointer to the local time
     time_t now = time(NULL);
     struct tm *time_now = localtime(&now);
-    Date c_date = {
-        .year = (time_now->tm_year + 1900),
-        .day = time_now->tm_mday,
 
+    // Initialize a Date from the struct tm's year, month, and day
+    Date c_date = {
+        .year = (time_now->tm_year + 1900), // tm_year => years since 1900
+        .day = time_now->tm_mday,
     };
     strncpy(c_date.month, MONTHS[time_now->tm_mon], MONTH_STR_LEN);
+
+    // Initialize a Time from the struct tm's hours and minutes
     Time c_time = {
         .hours = time_now->tm_hour,
         .minutes = time_now->tm_min,
     };
+
+    // Set the current_datetime to the current date and time
     current_datetime = (DateTime){
         .date = c_date,
         .time = c_time,
     };
+}
+
+void toupper_string(char *string)
+{
+    for (int i = 0; string[i] != '\0'; i++)
+    {
+        if (islower(string[i]))
+        {
+            string[i] = toupper(string[i]); // Convert lowercase letters to uppercase
+        }
+    }
 }
 
 int flight_compare(Flight *a, Flight *b)
@@ -390,13 +431,9 @@ int flight_compare(Flight *a, Flight *b)
     long long b_departure_in_minutes = datetime_to_minutes(b->departure);
 
     // Sort by Departure
-    if (a_departure_in_minutes < b_departure_in_minutes)
+    if (a_departure_in_minutes - b_departure_in_minutes != 0)
     {
-        return -1;
-    }
-    else if (a_departure_in_minutes > b_departure_in_minutes)
-    {
-        return 1;
+        return a_departure_in_minutes - b_departure_in_minutes; // Return an integer indicating the order
     }
 
     // Sort by Origin
@@ -467,10 +504,8 @@ bool valid_day(int day, char *month, int year)
 
 bool valid_month(char *input)
 {
-    // Iterate over the MONTHS array
     for (int i = 0; i < 12; i++)
     {
-        // Check if the input matches any month in the array
         if (strcmp(input, MONTHS[i]) == 0)
         {
             return true; // Return true if input is in the MONTHS array
@@ -490,60 +525,42 @@ bool valid_string(char *string)
 
 bool validate_id(char *id)
 {
-    // Check if the id is empty
     if (strlen(id) == 0)
     {
-        return false;
+        return false; // Return false if the id is length 0 (no id)
     }
-    // Check if the id exceeds the maximum length FLIGHT_ID_LEN
     if (strlen(id) > FLIGHT_ID_LEN)
     {
-        return false;
+        return false; // Return false if the id length exceeds the maximum length FLIGHT_ID_LEN
     }
-    // Iterate over the string
     for (int i = 0; id[i] != '\0'; i++)
     {
-        // Check for non alphanumeric letters
         if (!isalnum(id[i]))
         {
-            return false;
-        }
-        // Check for lowercase letters, turn them uppercase
-        else if (islower(id[i]))
-        {
-            id[i] = toupper(id[i]);
+            return false; // Return false if the id contains non-alphanumeric characters
         }
     }
-    return true;
+    return true; // Return true otherwise
 }
 
 bool validate_passport(char *passport_number)
 {
-    // Check if the length of the passport_number is 9
     if (strlen(passport_number) != PASSPORT_NUM_LEN)
     {
-        return false;
+        return false; // Return false if the passport number length is not equal to PASSPORT_NUM_LEN
     }
-    // Iterate over the string
     for (int i = 0; passport_number[i] != '\0'; i++)
     {
-        // Check for non alphanumeric letters
         if (!isalnum(passport_number[i]))
         {
-            return false;
-        }
-        // Check for lowercase letters, turn them uppercase
-        else if (islower(passport_number[i]))
-        {
-            passport_number[i] = toupper(passport_number[i]);
+            return false; // Return false if the passport number contains non-alphanumeric characters
         }
     }
-    return true;
+    return true; // Return true otherwise
 }
 
 int month_to_int(char *month)
 {
-    // Iterate over the MONTHS array
     for (int i = 0; i < 12; i++)
     {
         // Check if the input matches any month in the array
@@ -552,7 +569,7 @@ int month_to_int(char *month)
             return i + 1; // Returns the month number of a month string
         }
     }
-    return -1;
+    return -1; // Return -1 if the month is not found
 }
 
 long long datetime_to_minutes(DateTime dt)
@@ -573,46 +590,47 @@ int days_in_month(char *month, int year)
         // If the year is a leap year
         if (is_leap(year))
         {
-            return 29;
+            return 29; // Return 29 days if the year is a leap year and the month is February
         }
         else
         {
-            return 28;
+            return 28; // Return 28 days if the year is not a leap year and the month is February
         }
     }
     // Check if the month is April, June, September, or November
     else if (strcmp(month, "April") == 0 || strcmp(month, "June") == 0 ||
              strcmp(month, "September") == 0 || strcmp(month, "November") == 0)
     {
-        return 30;
+        return 30; // Return 30 days if the month is April, June, September, or November
     }
     else
     {
-        return 31;
+        return 31; // Return 31 days if the month for all other months
     }
 }
 
 DateTime compute_arrival_datetime(DateTime departure, Time duration)
 {
+    // Initialize arrival DateTime
     DateTime arrival = departure;
     arrival.time.hours += duration.hours;     // Add the duration to the hours
     arrival.time.minutes += duration.minutes; // Add the duration to the minutes
 
     // Normalize the minutes
-    while (arrival.time.minutes >= 60)
+    while (arrival.time.minutes >= 60) // If the minutes exceed 59
     {
         arrival.time.minutes -= 60; // Subtract 60 minutes
         arrival.time.hours++;       // Add an hour
     }
     // Normalize the hours
-    while (arrival.time.hours >= 24)
+    while (arrival.time.hours >= 24) // If the hours exceed 23
 
     {
         arrival.time.hours -= 24; // Subtract 24 hours
         arrival.date.day++;       // Add a day
     }
     // Normalize the days
-    while (arrival.date.day > days_in_month(arrival.date.month, arrival.date.year))
+    while (arrival.date.day > days_in_month(arrival.date.month, arrival.date.year)) // If the day exceeds the number of days in the month
     {
         arrival.date.day -= days_in_month(arrival.date.month, arrival.date.year); // Subtract the number of days in the month of the current month
         if (month_to_int(arrival.date.month) == 12)                               // If the month is currently December
@@ -622,7 +640,7 @@ DateTime compute_arrival_datetime(DateTime departure, Time duration)
         strncpy(arrival.date.month, MONTHS[month_to_int(arrival.date.month) % 12], MONTH_STR_LEN); // Increment the month
     }
 
-    return arrival;
+    return arrival; // Return the arrival DateTime
 }
 
 bool is_conflicting(DateTime departure1, DateTime arrival1, DateTime departure2, DateTime arrival2)
@@ -633,14 +651,14 @@ bool is_conflicting(DateTime departure1, DateTime arrival1, DateTime departure2,
     long long departure2_in_minutes = datetime_to_minutes(departure2);
     long long arrival2_in_minutes = datetime_to_minutes(arrival2);
 
-    // Check if the two time periods overlap
+    // Check if the DateTime is in the bounds of another DateTime
     if ((departure1_in_minutes <= arrival2_in_minutes) && (arrival1_in_minutes >= departure2_in_minutes))
     {
-        return true;
+        return true; // Return true if the DateTime is in the bounds of another DateTime
     }
     else
     {
-        return false;
+        return false; // Return false otherwise
     }
 }
 
@@ -663,12 +681,8 @@ bool is_leap(int year)
 
 bool is_future(DateTime old, DateTime new)
 {
-    // Convert DateTime to minutes since some point, for easy comparison
-    long long old_in_minutes = datetime_to_minutes(old);
-    long long new_in_minutes = datetime_to_minutes(new);
-
     // Check if the new DateTime is in the future compared to the old DateTime
-    return new_in_minutes > old_in_minutes;
+    return datetime_to_minutes(new) > datetime_to_minutes(old);
 }
 
 char *get_string(char *prompt, FILE *stream)
@@ -709,7 +723,7 @@ char *get_string(char *prompt, FILE *stream)
             }
             else
             {
-                buffer = temp;
+                buffer = temp; // Set the buffer to the new memory
             }
         }
     }
@@ -764,7 +778,7 @@ int get_int(char *prompt)
 Date get_date(char *prompt)
 {
     Date new_date;                                     // Holds the new Date
-    char *input, *endptr;                              // String input, endptr for strtol
+    char *input = NULL, *endptr = NULL;                // String input, endptr for strtol
     bool month_is_valid = false, day_is_valid = false; // Bools for validating inputs
 
     // Print prompt if there is a prompt
@@ -841,7 +855,7 @@ Time get_time(char *prompt, bool is_duration)
 
         } while (new_time.minutes < 0 || new_time.minutes > 59);
 
-        // If the time is a duration
+        // If we are getting a duration
         if (is_duration)
         {
             // Check if the duration is valid
@@ -864,8 +878,6 @@ DateTime get_departure_datetime(char *prompt)
     Date new_date;                   // Holds the new Date
     Time new_time;                   // Holds the new Time
     DateTime new_datetime;           // Holds the new DateTime
-    char *input, *endptr;            // String Input, endptr for strtol
-    bool month_is_valid = false;     // Bools for validating inputs
     bool datetime_is_future = false; // Bool for checking if the DateTime is in the future
 
     do
@@ -899,7 +911,7 @@ DateTime get_departure_datetime(char *prompt)
     } while (!datetime_is_future);
 
     // Set the DateTime components using the acquired Date and Time
-    new_datetime = (DateTime){.date = new_date, .time = new_time}; // Compound Literal
+    new_datetime = (DateTime){.date = new_date, .time = new_time};
 
     return new_datetime; // Return the new DateTime
 }
@@ -1009,8 +1021,8 @@ Flight *create_flight_node()
         .arrival.time = (Time){.hours = 0, .minutes = 0},
         .passenger_qty = 0,
         .bonus_miles = 0,
-        .next = NULL,
-    }; // Compound Literal
+        .prev = NULL,
+        .next = NULL};
 
     return new_flight;
 }
@@ -1025,11 +1037,11 @@ Flight *search_flight_node(Flight *head, char *flight_id)
     {
         if (strcmp(curr->flight_id, flight_id) == 0)
         {
-            return curr; // return the pointer to the node if found
+            return curr; // Return the pointer to the node if found
         }
         curr = curr->next;
     }
-    return NULL; // return NULL if not found
+    return NULL; // Return NULL if not found
 }
 
 void insert_flight_node(Flight **head, Flight *node)
@@ -1041,6 +1053,10 @@ void insert_flight_node(Flight **head, Flight *node)
     if (*head == NULL || flight_compare(node, *head) < 0)
     {
         node->next = *head;
+        if (*head != NULL)
+        {
+            (*head)->prev = node;
+        }
         *head = node;
     }
     // Traverse the list until we find the correct position
@@ -1051,32 +1067,41 @@ void insert_flight_node(Flight **head, Flight *node)
             curr = curr->next;
         }
         node->next = curr->next;
+        if (curr->next != NULL)
+        {
+            curr->next->prev = node;
+        }
         curr->next = node;
+        node->prev = curr;
     }
 }
 
 void reinsert_flight_node(Flight **head, Flight *node)
 {
-    // Start from the head
-    Flight *prev = *head;
-    Flight *curr = *head; // The node that will be reinserted
-
     // If the node to delete is the head
     if (*head == node)
     {
-        curr = *head;
         *head = (*head)->next;
+        if (*head != NULL)
+        {
+            (*head)->prev = NULL;
+        }
     }
-
-    // Find the node to delete
-    while (curr != node)
+    else
     {
-        prev = curr;
-        curr = curr->next;
+        if (node->next != NULL)
+        {
+            node->next->prev = node->prev;
+        }
+        if (node->prev != NULL)
+        {
+            node->prev->next = node->next;
+        }
     }
 
-    // Remove the node from the list
-    prev->next = curr->next;
+    // Reset the node's pointers
+    node->prev = NULL;
+    node->next = NULL;
 
     // Reinsert the node
     insert_flight_node(&(*head), node);
@@ -1085,26 +1110,20 @@ void reinsert_flight_node(Flight **head, Flight *node)
 void delete_flight_node(Flight **head, char *flight_id)
 {
     // Start from the head
-    Flight *prev = *head;
     Flight *curr = *head;
-
-    // Stores the node that will be deleted
-    Flight *temp;
 
     // If the node to delete is the head
     if (strcmp((*head)->flight_id, flight_id) == 0)
     {
-        temp = *head;
         *head = (*head)->next;
 
-        free_flight_node(temp);
+        free_flight_node(curr);
         return;
     }
 
     // Find the node to delete
     while (curr != NULL && strcmp(curr->flight_id, flight_id) != 0)
     {
-        prev = curr;
         curr = curr->next;
     }
 
@@ -1115,8 +1134,16 @@ void delete_flight_node(Flight **head, char *flight_id)
         return;
     }
 
-    prev->next = curr->next; // Remove the node from the list
-    free_flight_node(curr);  // Free the deleted node
+    // Remove the node from the list
+    if (curr->next != NULL)
+    {
+        curr->next->prev = curr->prev;
+    }
+    if (curr->prev != NULL)
+    {
+        curr->prev->next = curr->next;
+    }
+    free_flight_node(curr); // Free the deleted node
 }
 
 int count_flights(Flight *head)
@@ -1153,7 +1180,9 @@ Passenger *create_passenger_node()
         .birthdate = (Date){.day = 0, .month = "", .year = 0},
         .passport_number = NULL,
         .reservation_qty = 0,
-        .miles = 0}; // Compound Literal
+        .miles = 0,
+        .prev = NULL,
+        .next = NULL};
 
     return new_passenger; // Return the Passenger
 }
@@ -1168,12 +1197,12 @@ Passenger *search_passenger_node(Passenger *head, char *passport_number)
     {
         if (strcmp(curr->passport_number, passport_number) == 0)
         {
-            return curr; // return the pointer to the node
+            return curr; // Return the pointer to the node
         }
         curr = curr->next;
     }
 
-    return NULL; // return NULL if node does not exist
+    return NULL; // Return NULL if node does not exist
 }
 
 void insert_passenger_node(Passenger **head, Passenger *node)
@@ -1185,6 +1214,10 @@ void insert_passenger_node(Passenger **head, Passenger *node)
     if (*head == NULL || passenger_compare(node, *head) < 0)
     {
         node->next = *head;
+        if (node->next != NULL)
+        {
+            node->next->prev = node;
+        }
         *head = node;
     }
     // Traverse the list until we find the correct position
@@ -1195,7 +1228,12 @@ void insert_passenger_node(Passenger **head, Passenger *node)
             curr = curr->next;
         }
         node->next = curr->next;
+        if (node->next != NULL)
+        {
+            node->next->prev = node;
+        }
         curr->next = node;
+        node->prev = curr;
     }
 }
 
@@ -1228,7 +1266,7 @@ Reservation *create_reservation_node(Flight *flight)
 
     // Initialize field with the Flight
     *new_reservation = (Reservation){
-        .flight = flight, .next = NULL}; // Compound Literal
+        .flight = flight, .prev = NULL, .next = NULL};
 
     return new_reservation; // Return the Reservation
 }
@@ -1243,11 +1281,11 @@ Reservation *search_reservation_node(Reservation *head, Flight *flight)
     {
         if (strcmp(curr->flight->flight_id, flight->flight_id) == 0)
         {
-            return curr; // return the pointer to the node
+            return curr; // Return the pointer to the node
         }
         curr = curr->next;
     }
-    return NULL; // return NULL if node does not exist
+    return NULL; // Return NULL if node does not exist
 }
 
 void insert_reservation_node(Reservation **head, Reservation *node)
@@ -1259,6 +1297,10 @@ void insert_reservation_node(Reservation **head, Reservation *node)
     if (*head == NULL || flight_compare(node->flight, (*head)->flight) < 0)
     {
         node->next = *head;
+        if (node->next != NULL)
+        {
+            node->next->prev = node;
+        }
         *head = node;
     }
     // Traverse the list until we find the correct position
@@ -1269,41 +1311,53 @@ void insert_reservation_node(Reservation **head, Reservation *node)
             curr = curr->next;
         }
         node->next = curr->next;
+        if (node->next != NULL)
+        {
+            node->next->prev = node;
+        }
         curr->next = node;
+        node->prev = curr;
     }
 }
 
 void delete_reservation_node(Reservation **head, Flight *flight)
 {
     // Start from the head
-    Reservation *prev = *head;
     Reservation *curr = *head;
 
-    // Stores the node that will be deleted
-    Reservation *temp;
+    if (strcmp((*head)->flight->flight_id, flight->flight_id) == 0) // If the node to delete is the head
+    {
+        *head = (*head)->next;
+        if (*head != NULL)
+        {
+            (*head)->prev = NULL;
+        }
+        free(curr);
+        return;
+    }
 
-    if (search_reservation_node(*head, flight) == NULL) // If the reservation does not exist
+    // Find the node to delete
+    while (strcmp(curr->flight->flight_id, flight->flight_id) != 0) // Find the node to delete
+    {
+        curr = curr->next;
+    }
+
+    // If the node was not found
+    if (curr == NULL)
     {
         printf(RED "[Error] Reservation does not exist.\n\n" RST);
         return;
     }
-
-    if (strcmp((*head)->flight->flight_id, flight->flight_id) == 0) // If the node to delete is the head
+    // Remove the node from the linked list
+    if (curr->next != NULL)
     {
-        temp = *head;
-        *head = (*head)->next;
-
-        free(temp);
-        return;
+        curr->next->prev = curr->prev;
     }
-
-    while (strcmp(curr->flight->flight_id, flight->flight_id) != 0) // Find the node to delete
+    if (curr->prev != NULL)
     {
-        prev = curr;
-        curr = curr->next;
+        curr->prev->next = curr->next;
     }
-    prev->next = curr->next; // Remove the node from the linked list
-    free(curr);              // Free the node
+    free(curr); // Free the deleted node
 }
 
 int count_reservations(Reservation *head)
@@ -1333,6 +1387,7 @@ void add_flight(Flight **head)
 
     // Ask for Flight ID and validate
     flight_id = get_string("Flight ID:   ", stdin);
+    toupper_string(flight_id);
     if (!validate_id(flight_id))
     {
         printf(RED "[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n" RST);
@@ -1438,6 +1493,7 @@ void edit_flight(Flight **head)
 
     // Ask for a Flight ID and validate
     flight_id = get_string("Flight ID: ", stdin);
+    toupper_string(flight_id);
     if (!validate_id(flight_id))
     {
         printf(RED "\n[Error] A valid Flight ID has at least 1 and at most 6 uppercase letters and/or digits only.\n\n" RST);
@@ -1517,6 +1573,7 @@ void view_flights(Flight *head, int mode)
 
         // Ask for a Flight ID and Validate
         flight_id = get_string("Flight ID: ", stdin);
+        toupper_string(flight_id);
         printf("\n");
         if (!validate_id(flight_id))
         {
@@ -1764,6 +1821,7 @@ void delete_flight(Flight **head)
 
     // Ask for a Flight ID and validate
     char *flight_id = get_string("Flight ID: ", stdin);
+    toupper_string(flight_id);
     printf("\n");
     if (!validate_id(flight_id))
     {
@@ -1849,6 +1907,7 @@ void add_passenger(Passenger **head)
             free(passport_number);
         }
         passport_number = get_string("Passport Number: ", stdin);
+        toupper_string(passport_number);
         if (!(passport_is_valid = validate_passport(passport_number)))
         {
             printf(RED "\n[Error] A valid passport number has 9 uppercase letters and/or digits.\n" RST);
@@ -1901,6 +1960,7 @@ void edit_passenger(Passenger *head)
 
     // Ask for a Passport Number and validate
     passport_number = get_string("Passport Number: ", stdin);
+    toupper_string(passport_number);
     printf("\n");
     if (!validate_passport(passport_number))
     {
@@ -1952,6 +2012,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
 
     // Ask for a Passport Number and validate
     passport_number = get_string("Passport Number: ", stdin);
+    toupper_string(passport_number);
     printf("\n");
     if (!validate_passport(passport_number))
     {
@@ -1976,6 +2037,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
 
     // Ask for a Flight ID and validate
     flight_id = get_string("Flight ID: ", stdin);
+    toupper_string(flight_id);
     printf("\n");
     if (!validate_id(flight_id))
     {
@@ -2066,6 +2128,7 @@ void remove_reservation(Flight *f_head, Passenger *p_head)
 
     // Ask for a Passport Number and validate
     passport_number = get_string("Passport Number: ", stdin);
+    toupper_string(passport_number);
     printf("\n");
     if (!validate_passport(passport_number))
     {
@@ -2092,6 +2155,7 @@ void remove_reservation(Flight *f_head, Passenger *p_head)
 
     // Ask for a Flight ID and validate
     flight_id = get_string("Flight ID: ", stdin);
+    toupper_string(flight_id);
     printf("\n");
     if (!validate_id(flight_id))
     {
@@ -2145,6 +2209,7 @@ void view_reservations(Passenger *head)
 
     // Ask for a Passport Number and validate
     passport_number = get_string("Passport Number: ", stdin);
+    toupper_string(passport_number);
     printf("\n");
     if (!validate_passport(passport_number))
     {
