@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 // ANSI Color Codes - https://gist.github.com/RabaDabaDoba/145049536f815903c79944599c6f952a
 
@@ -26,6 +27,8 @@
 #define MIN_PASSENGERS 1
 #define FLIGHTS_FILE "flights.txt"
 #define PASSENGERS_FILE "passengers.txt"
+#define MIN_DURATION 1
+#define MAX_DURATION 1140
 
 const char *MONTHS[12] =
     {"January", "February", "March", "April",
@@ -86,9 +89,10 @@ typedef struct Passenger // A structure for a Passenger with passenger details.
 
 // General Helper Functions
 
-int main_menu();       // Prints a menu and returns an integer
-bool confirm_delete(); // Asks the user if they are sure of deleting data
-void clean_exit();     // Cleanly exits the program when there is no more memory left
+int main_menu();            // Prints a menu and returns an integer
+bool confirm_delete();      // Asks the user if they are sure of deleting data
+void clean_exit();          // Cleanly exits the program when there is no more memory left
+void update_current_date(); // Updates the current date and time
 
 // Comparison Helper Functions
 
@@ -105,21 +109,24 @@ bool validate_passport(char *passport_numnber); // Checks if a passport is valid
 
 // DateTime Helper Functions
 
-int month_to_int(char *month);              // Converts a month to its number
-long long datetime_to_minutes(DateTime dt); // Converts a DateTime to minutes
+int month_to_int(char *month);                                        // Converts a month to its number
+long long datetime_to_minutes(DateTime dt);                           // Converts a DateTime to minutes
+int days_in_month(char *month, int year);                             // Gets the number of days in a month
+DateTime compute_arrival_datetime(DateTime departure, Time duration); // Gets an arrival DateTime from a departure DateTime and duration
 
 // DateTime Check Helper Functions
 
 bool is_conflicting(DateTime departure1, DateTime arrival1, DateTime departure2, DateTime arrival2); // Checks if a DateTime is in the bounds of another DateTime
-bool is_future(DateTime old, DateTime new);                                                          // Checks if a date is in the future (from another date)
 bool is_leap(int year);                                                                              // Checks if a year is a leap year
+bool is_future(DateTime old, DateTime new);                                                          // Checks if a DateTime is in the future (from another DateTime)
 
 // Input Functions
 
-char *get_string(char *prompt, FILE *stream);                              // Prompts a user for a string or gets a string from a file (with automatic dynamic memory allocation)
-int get_int(char *prompt);                                                 // Prompts a user for an integer
-Date get_date(char *prompt);                                               // Prompts a user for a Date
-DateTime get_datetime(char *prompt, bool is_arrival, DateTime *departure); // Prompts a user for a DateTime
+char *get_string(char *prompt, FILE *stream);  // Prompts a user for a string or gets a string from a file (with automatic dynamic memory allocation)
+int get_int(char *prompt);                     // Prompts a user for an integer
+Date get_date(char *prompt);                   // Prompts a user for a Date (for DateTimes, birthdays)
+Time get_time(char *prompt, bool is_duration); // Prompts a user for a Time (for DateTimes, durations)
+DateTime get_departure_datetime(char *prompt); // Prompts a user for a departure DateTime
 
 // Memory Functions
 
@@ -177,6 +184,9 @@ void save(Flight *f_head, Passenger *p_head);   // Save flights and passengers
 Flight *flights = NULL;
 Passenger *passengers = NULL;
 
+// Global Time
+DateTime CURRENT_DATE;
+
 int main()
 {
     // Variables
@@ -189,6 +199,8 @@ int main()
     do
     {
         choice = main_menu(); // Ask the user for a choice from the menu
+        // Set the current date every time user inputs a choice
+        update_current_date();
         printf("\n");
         switch (choice)
         {
@@ -348,6 +360,27 @@ void clean_exit()
 
     // Exit with failure status
     exit(EXIT_FAILURE);
+}
+
+void update_current_date()
+{
+    // Use time.h to get the DateTime
+    time_t now = time(NULL);
+    struct tm *time_now = localtime(&now);
+    Date c_date = {
+        .year = (time_now->tm_year + 1900),
+        .day = time_now->tm_mday,
+
+    };
+    strncpy(c_date.month, MONTHS[time_now->tm_mon], MONTH_STR_LEN);
+    Time c_time = {
+        .hours = time_now->tm_hour,
+        .minutes = time_now->tm_min,
+    };
+    CURRENT_DATE = (DateTime){
+        .date = c_date,
+        .time = c_time,
+    };
 }
 
 int flight_compare(Flight *a, Flight *b)
@@ -532,6 +565,66 @@ long long datetime_to_minutes(DateTime dt)
            dt.time.minutes;
 }
 
+int days_in_month(char *month, int year)
+{
+    // Check if the month is February
+    if (strcmp(month, "February") == 0)
+    {
+        // If the year is a leap year
+        if (is_leap(year))
+        {
+            return 29;
+        }
+        else
+        {
+            return 28;
+        }
+    }
+    // Check if the month is April, June, September, or November
+    else if (strcmp(month, "April") == 0 || strcmp(month, "June") == 0 ||
+             strcmp(month, "September") == 0 || strcmp(month, "November") == 0)
+    {
+        return 30;
+    }
+    else
+    {
+        return 31;
+    }
+}
+
+DateTime compute_arrival_datetime(DateTime departure, Time duration)
+{
+    DateTime arrival = departure;
+    arrival.time.hours += duration.hours;     // Add the duration to the hours
+    arrival.time.minutes += duration.minutes; // Add the duration to the minutes
+
+    // Normalize the minutes
+    while (arrival.time.minutes >= 60)
+    {
+        arrival.time.minutes -= 60; // Subtract 60 minutes
+        arrival.time.hours++;       // Add an hour
+    }
+    // Normalize the hours
+    while (arrival.time.hours >= 24)
+
+    {
+        arrival.time.hours -= 24; // Subtract 24 hours
+        arrival.date.day++;       // Add a day
+    }
+    // Normalize the days
+    while (arrival.date.day > days_in_month(arrival.date.month, arrival.date.year))
+    {
+        arrival.date.day -= days_in_month(arrival.date.month, arrival.date.year); // Subtract the number of days in the month of the current month
+        if (month_to_int(arrival.date.month) == 12)                               // If the month is currently December
+        {
+            arrival.date.year++; // Increment the year
+        }
+        strncpy(arrival.date.month, MONTHS[month_to_int(arrival.date.month) % 12], MONTH_STR_LEN); // Increment the month
+    }
+
+    return arrival;
+}
+
 bool is_conflicting(DateTime departure1, DateTime arrival1, DateTime departure2, DateTime arrival2)
 {
     // Convert DateTime to minutes
@@ -551,16 +644,6 @@ bool is_conflicting(DateTime departure1, DateTime arrival1, DateTime departure2,
     }
 }
 
-bool is_future(DateTime old, DateTime new)
-{
-    // Convert DateTime to minutes since some point, for easy comparison
-    long long old_in_minutes = datetime_to_minutes(old);
-    long long new_in_minutes = datetime_to_minutes(new);
-
-    // Check if the new DateTime is in the future compared to the old DateTime
-    return new_in_minutes > old_in_minutes;
-}
-
 bool is_leap(int year)
 {
     if (year % 4 != 0) // A leap year must be disivible by 4...
@@ -576,6 +659,16 @@ bool is_leap(int year)
         return true;
     }
     return false;
+}
+
+bool is_future(DateTime old, DateTime new)
+{
+    // Convert DateTime to minutes since some point, for easy comparison
+    long long old_in_minutes = datetime_to_minutes(old);
+    long long new_in_minutes = datetime_to_minutes(new);
+
+    // Check if the new DateTime is in the future compared to the old DateTime
+    return new_in_minutes > old_in_minutes;
 }
 
 char *get_string(char *prompt, FILE *stream)
@@ -681,14 +774,8 @@ Date get_date(char *prompt)
     }
 
     // Ask for a year
-    do
-    {
-        new_date.year = get_int("Year:    ");
-        if (new_date.year < 1909) // First recorded use of an airport :)
-        {
-            printf(RED "[Error] Invalid year. Please type a valid year (1909 or after).\n" RST);
-        }
-    } while (new_date.year < 1909);
+
+    new_date.year = get_int("Year:    ");
 
     // Ask for a month
     do
@@ -703,14 +790,13 @@ Date get_date(char *prompt)
         {
             strncpy(new_date.month, input, MONTH_STR_LEN);
         }
-
         free(input);
     } while (!month_is_valid);
 
     // Ask for a day
     do
     {
-        new_date.day = get_int("Day    : ");
+        new_date.day = get_int("Day:     ");
         day_is_valid = valid_day(new_date.day, new_date.month, new_date.year);
         if (!day_is_valid)
         {
@@ -721,13 +807,10 @@ Date get_date(char *prompt)
     return new_date;
 }
 
-DateTime get_datetime(char *prompt, bool is_arrival, DateTime *departure)
+Time get_time(char *prompt, bool is_duration)
 {
-    Date new_date;                                         // Holds the new Date
-    Time new_time;                                         // Holds the new Time
-    DateTime new_datetime;                                 // Holds the new DateTime
-    char *input, *endptr;                                  // String Input, endptr for strtol
-    bool month_is_valid = false, arrival_is_future = true; // Bools for validating inputs
+    Time new_time; // Holds the new Time
+    bool is_valid_duration = false;
 
     do
     {
@@ -737,16 +820,13 @@ DateTime get_datetime(char *prompt, bool is_arrival, DateTime *departure)
             printf("\n%s\n\n", prompt);
         }
 
-        // Ask for a Date (Year, Month, Day)
-        new_date = get_date(NULL);
-
         // Ask for hours
         do
         {
-            new_time.hours = get_int("Hour:    ");
+            new_time.hours = get_int("Hours:   ");
             if (new_time.hours < 0 || new_time.hours > 23)
             {
-                printf(RED "[Error] Hour is not in range (0-23).\n" RST);
+                printf(RED "[Error] Hours are not in range (0-23).\n" RST);
             }
         } while (new_time.hours < 0 || new_time.hours > 23);
 
@@ -761,19 +841,65 @@ DateTime get_datetime(char *prompt, bool is_arrival, DateTime *departure)
 
         } while (new_time.minutes < 0 || new_time.minutes > 59);
 
-        // Set the DateTime components using the acquired Date and Time
-        new_datetime = (DateTime){.date = new_date, .time = new_time}; // Compound Literal
-
-        // If this input is for an arrival DateTime, make sure it is to the future of the departure
-        if (is_arrival)
+        // If the time is a duration
+        if (is_duration)
         {
-            arrival_is_future = is_future(*departure, new_datetime);
-            if (!arrival_is_future)
+            // Check if the duration is valid
+            if (new_time.hours * 60 + new_time.minutes >= MIN_DURATION && new_time.hours * 60 + new_time.minutes <= MAX_DURATION)
             {
-                printf(RED "[Error] Your arrival must be after the departure.\n" RST);
+                is_valid_duration = true;
+            }
+            else
+            {
+                printf(RED "[Error] Duration is not in range (1 minute to 19 hours).\n" RST);
             }
         }
-    } while (!arrival_is_future);
+    } while ((is_duration && !is_valid_duration));
+
+    return new_time;
+}
+
+DateTime get_departure_datetime(char *prompt)
+{
+    Date new_date;                   // Holds the new Date
+    Time new_time;                   // Holds the new Time
+    DateTime new_datetime;           // Holds the new DateTime
+    char *input, *endptr;            // String Input, endptr for strtol
+    bool month_is_valid = false;     // Bools for validating inputs
+    bool datetime_is_future = false; // Bool for checking if the DateTime is in the future
+
+    do
+    {
+        // Print prompt if there is a prompt
+        if (prompt != NULL)
+        {
+            printf("\n%s\n\n", prompt);
+        }
+        // Ask for a Date (Year, Month, Day)
+        new_date = get_date(NULL);
+
+        // Ask for Time (Hours, Minutes)
+        new_time = get_time(NULL, false);
+
+        // Check if the DateTime is in the future
+        datetime_is_future = is_future(CURRENT_DATE, (DateTime){.date = new_date, .time = new_time});
+
+        if (!datetime_is_future)
+        {
+            printf(RED "[Error] Departure must be after current date and time.\n" RST);
+            printf("Current Date and Time:   ");
+            printf("%d %s %d %02d:%02d\n",
+                   CURRENT_DATE.date.day, CURRENT_DATE.date.month, CURRENT_DATE.date.year,
+                   CURRENT_DATE.time.hours, CURRENT_DATE.time.minutes);
+            printf("Departure Date and Time: ");
+            printf("%d %s %d %02d:%02d\n",
+                   new_date.day, new_date.month, new_date.year,
+                   new_time.hours, new_time.minutes);
+        }
+    } while (!datetime_is_future);
+
+    // Set the DateTime components using the acquired Date and Time
+    new_datetime = (DateTime){.date = new_date, .time = new_time}; // Compound Literal
 
     return new_datetime; // Return the new DateTime
 }
@@ -1200,6 +1326,7 @@ int count_reservations(Reservation *head)
 void add_flight(Flight **head)
 {
     char *flight_id = NULL;                              // Holds the input flight_id
+    Time duration;                                       // Holds the input duration
     bool string_is_valid = false, dest_is_origin = true; // Bools for validation
 
     printf(BCYN "== Add Flight =============================\n\n" RST);
@@ -1260,10 +1387,13 @@ void add_flight(Flight **head)
     } while (!string_is_valid || dest_is_origin);
 
     // Ask for Departure DateTime
-    new_flight->departure = get_datetime(BCYN "-- Departure -------------------------" RST, false, NULL);
+    new_flight->departure = get_departure_datetime(BCYN "-- Departure -------------------------" RST);
+
+    // Ask for Duration
+    duration = get_time(BCYN "-- Duration --------------------------" RST, "duration");
 
     // Ask for Arrival DateTime
-    new_flight->arrival = get_datetime(BCYN "-- Arrival ---------------------------" RST, true, &new_flight->departure);
+    new_flight->arrival = compute_arrival_datetime(new_flight->departure, duration);
 
     // Number of Booked Passengers is already set to 0
 
@@ -1299,6 +1429,7 @@ void edit_flight(Flight **head)
 {
     char *flight_id;      // Holds the input flight_id
     Flight *f_ptr = NULL; // A pointer to the Flight to delete
+    Time duration;        // Holds the input duration
 
     printf(BCYN "== Edit Flight ============================\n\n" RST);
 
@@ -1322,10 +1453,13 @@ void edit_flight(Flight **head)
     free(flight_id);
 
     // New Departure DateTime
-    f_ptr->departure = get_datetime(BCYN "-- Departure -------------------------" RST, false, NULL);
+    f_ptr->departure = get_departure_datetime(BCYN "-- Departure -------------------------" RST);
+
+    // New Duration (for a new Arrival DateTime)
+    duration = get_time(BCYN "-- Duration --------------------------" RST, "duration");
 
     // New Arrival DateTime
-    f_ptr->arrival = get_datetime(BCYN "-- Arrival ---------------------------" RST, true, &f_ptr->departure);
+    f_ptr->arrival = compute_arrival_datetime(f_ptr->departure, duration);
 
     // New Max Passengers (Seats)
     printf(BCYN "\n--------------------------------------\n\n" RST);
@@ -1365,8 +1499,9 @@ int view_flights_menu()
 void view_flights(Flight *head, int mode)
 {
     int count = 0;
-    Flight *ptr = head; // A pointer to the Flight to view
-    char *flight_id;    // Input string
+    Flight *ptr = head;         // A pointer to the Flight to view
+    char *flight_id;            // Input string
+    bool flights_exist = false; // Boolean to check for flights
 
     switch (mode)
     {
@@ -1374,7 +1509,11 @@ void view_flights(Flight *head, int mode)
         printf(BCYN "-- View Flights > Specific -----------\n\n" RST);
 
         // Print flights (in linear form)
-        view_flights_linear(head, 3);
+        flights_exist = view_flights_linear(head, 3);
+        if (!flights_exist)
+        {
+            return;
+        }
 
         // Ask for a Flight ID and Validate
         flight_id = get_string("Flight ID: ", stdin);
@@ -1514,8 +1653,14 @@ bool view_flights_linear(Flight *head, int mode)
                        ptr->departure.time.hours, ptr->departure.time.minutes,
                        ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
                        ptr->arrival.time.hours, ptr->arrival.time.minutes);
+                count++;
             }
             ptr = ptr->next;
+        }
+        if (count == 0)
+        {
+            printf(BLU "[Info] No flights are available.\n\n" RST);
+            return false;
         }
         printf("\n");
         break;
@@ -1798,6 +1943,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     Reservation *new_reservation = NULL;   // Pointer to the new Reservation Node
     DateTime *d_ptr = NULL, *a_ptr = NULL; // Pointer to a Reservation's DateTimes
     char *passport_number, *flight_id;
+    bool available_flights_exists = false; // Boolean for validationb
 
     printf(BCYN "== Book Reservation =======================\n\n" RST);
 
@@ -1822,7 +1968,11 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     free(passport_number);
 
     // Print flights (in linear form)
-    view_flights_linear(f_head, 1);
+    available_flights_exists = view_flights_linear(f_head, 1);
+    if (!available_flights_exists)
+    {
+        return;
+    }
 
     // Ask for a Flight ID and validate
     flight_id = get_string("Flight ID: ", stdin);
