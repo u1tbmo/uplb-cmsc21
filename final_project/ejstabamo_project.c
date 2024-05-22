@@ -185,7 +185,7 @@ Flight *flights = NULL;
 Passenger *passengers = NULL;
 
 // Global Time
-DateTime CURRENT_DATE;
+DateTime current_datetime;
 
 int main()
 {
@@ -377,7 +377,7 @@ void update_current_date()
         .hours = time_now->tm_hour,
         .minutes = time_now->tm_min,
     };
-    CURRENT_DATE = (DateTime){
+    current_datetime = (DateTime){
         .date = c_date,
         .time = c_time,
     };
@@ -882,15 +882,15 @@ DateTime get_departure_datetime(char *prompt)
         new_time = get_time(NULL, false);
 
         // Check if the DateTime is in the future
-        datetime_is_future = is_future(CURRENT_DATE, (DateTime){.date = new_date, .time = new_time});
+        datetime_is_future = is_future(current_datetime, (DateTime){.date = new_date, .time = new_time});
 
         if (!datetime_is_future)
         {
             printf(RED "[Error] Departure must be after current date and time.\n" RST);
             printf("Current Date and Time:   ");
             printf("%d %s %d %02d:%02d\n",
-                   CURRENT_DATE.date.day, CURRENT_DATE.date.month, CURRENT_DATE.date.year,
-                   CURRENT_DATE.time.hours, CURRENT_DATE.time.minutes);
+                   current_datetime.date.day, current_datetime.date.month, current_datetime.date.year,
+                   current_datetime.time.hours, current_datetime.time.minutes);
             printf("Departure Date and Time: ");
             printf("%d %s %d %02d:%02d\n",
                    new_date.day, new_date.month, new_date.year,
