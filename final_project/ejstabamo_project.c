@@ -31,7 +31,7 @@
 #define FLIGHTS_FILE "flights.txt"          // the string representing the file where flights are saved
 #define PASSENGERS_FILE "passengers.txt"    // the string representing the file where passengers are saved
 #define MIN_FLIGHT_DURATION_IN_MINUTES 1    // the minimum flight duration allowed for a flight
-#define MAX_FLIGHT_DURATION_IN_MINUTES 1140 // the maximum flight duration allowed for a flight
+#define MAX_FLIGHT_DURATION_IN_MINUTES 1130 // the maximum flight duration allowed for a flight (from Singapore (SIN) to New York (JFK))
 
 const char *MONTHS[12] = {"January", "February", "March", "April", // an array of month strings
                           "May", "June", "July", "August",
