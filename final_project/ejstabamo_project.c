@@ -1846,7 +1846,8 @@ void delete_flight(Flight **f_head, Passenger *p_head)
     // Variables
     Flight *f_ptr;
     Passenger *p_ptr;
-    bool removable_flights_exist, flight_arrived;
+    bool removable_flights_exist;
+    FlightStatus status;
 
     printf(B_CYAN "== Delete Flight ==========================\n\n" RESET);
 
@@ -1873,12 +1874,10 @@ void delete_flight(Flight **f_head, Passenger *p_head)
         return;
     }
 
-    // Update the current datetime
-    update_current_datetime();
+    // Retrieve the status of the flight
+    status = retrieve_flight_status(f_ptr);
 
-    flight_arrived = is_future(f_ptr->arrival, current_datetime);
-
-    if (!flight_arrived && f_ptr->passenger_qty != 0)
+    if (!status.flight_arrived && f_ptr->passenger_qty != 0)
     {
         printf(RED "[Error] Passengers have already booked this Flight.\n\n" RESET);
         return;
@@ -1888,7 +1887,7 @@ void delete_flight(Flight **f_head, Passenger *p_head)
     // Confirm deletion of Flight
     if (confirm_delete())
     {
-        if (flight_arrived)
+        if (status.flight_arrived)
         {
             p_ptr = p_head;
             while (p_ptr != NULL)
