@@ -100,7 +100,7 @@ typedef struct FlightStatus
 
 /* General Helper Functions */
 
-int main_menu();                // Prints a menu and returns an integer
+int main_menu();                // Prints a menu and returns an integer of the user's choice
 bool confirm_delete();          // Asks the user if they are sure of deleting data
 void clean_exit();              // Cleanly exits the program when there is no more memory left
 void update_current_datetime(); // Updates the current date and time
@@ -1583,7 +1583,7 @@ void add_flight(Flight **head)
     // Number of Booked Passengers is already set to 0
 
     // Ask for Max Count of Passengers (Seats)
-    printf(B_CYAN "\n--------------------------------------\n" RESET);
+    printf(B_CYAN "\n--------------------------------------\n\n" RESET);
     do
     {
         new_flight->passenger_max = get_int("Max Seats:   ");
@@ -1618,6 +1618,7 @@ void edit_flight(Flight **head)
     char *flight_id;
     Flight *f_ptr = NULL;
     Time duration;
+    FlightStatus status;
 
     printf(B_CYAN "== Edit Flight ============================\n\n" RESET);
 
@@ -1639,6 +1640,18 @@ void edit_flight(Flight **head)
         return;
     }
     free(flight_id);
+
+    status = retrieve_flight_status(f_ptr);
+    if (status.flight_departed && !status.flight_arrived)
+    {
+        printf(RED "\n[Error] That Flight is currently ongoing.\n\n" RESET);
+        return;
+    }
+    else if (status.flight_departed && status.flight_arrived)
+    {
+        printf(RED "\n[Error] That Flight has already arrived.\n\n" RESET);
+        return;
+    }
 
     // New Departure DateTime
     f_ptr->departure = get_departure_datetime(B_CYAN "-- Departure -------------------------" RESET);
@@ -2242,7 +2255,7 @@ void remove_reservation(Flight *f_head, Passenger *p_head)
 
     if (status.flight_departed && !status.flight_arrived)
     {
-        printf(RED "[Error] You cannot remove an ongoing reserved flight.\n\n");
+        printf(RED "[Error] You cannot remove an ongoing flight from your reservations.\n\n");
         return;
     }
 
