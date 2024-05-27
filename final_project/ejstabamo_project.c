@@ -20,7 +20,7 @@
 
 /* Global Constants/Definitions
     - STR_LEN means is for a strlen(), without the NUL terminator.
-    - SIZE means is for a size, like an array/string, which will include the NUL terminator.
+    - SIZE means is for a size, like an array/string, which (for a string) will include the NUL terminator.
 */
 
 #define FLIGHT_ID_STR_LEN 6                 // the strlen() of a flight ID
@@ -32,6 +32,9 @@
 #define PASSENGERS_FILE "passengers.txt"    // the string representing the file where passengers are saved
 #define MIN_FLIGHT_DURATION_IN_MINUTES 1    // the minimum flight duration allowed for a flight
 #define MAX_FLIGHT_DURATION_IN_MINUTES 1130 // the maximum flight duration allowed for a flight (from Singapore (SIN) to New York (JFK))
+#define VIEW_FLIGHTS_LINEAR_AVAILABLE 1     // the mode for viewing available flights in view_flights_linear()
+#define VIEW_FLIGHTS_LINEAR_REMOVABLE 2     // the mode for viewing removable flights in view_flights_linear()
+#define VIEW_FLIGHTS_LINEAR_ALL 3           // the mode for viewing all flights in view_flights_linear()
 
 const char *MONTHS[12] = {"January", "February", "March", "April", // an array of month strings
                           "May", "June", "July", "August",
@@ -68,15 +71,15 @@ typedef struct Flight // A structure for a Flight with Flight details.
     int passenger_qty;         // An int for the Flight's current number of passengers
     int passenger_max;         // An int for the Flight's maximum number of passengers allowed
     int bonus_miles;           // An int for the number of bonus miles a passenger gets for booking the flight
-    struct Flight *prev;       // A pointer to the previous Flight node
-    struct Flight *next;       // A pointer to the next Flight node
+    struct Flight *prev;       // A ptr to the previous Flight node
+    struct Flight *next;       // A ptr to the next Flight node
 } Flight;
 
 typedef struct Reservation // A structure for a Reservation with a Flight.
 {
-    struct Flight *flight;    // A pointer to the Flight reserved
-    struct Reservation *prev; // A pointer to the previous Reservation node
-    struct Reservation *next; // A pointer to the next Reservation node
+    struct Flight *flight;    // A ptr to the Flight reserved
+    struct Reservation *prev; // A ptr to the previous Reservation node
+    struct Reservation *next; // A ptr to the next Reservation node
 } Reservation;
 
 typedef struct Passenger // A structure for a Passenger with passenger details.
@@ -87,9 +90,9 @@ typedef struct Passenger // A structure for a Passenger with passenger details.
     char *passport_number;            // A str for the Passenger's passport number
     int miles;                        // An int for the Passenger's number of miles accumulated
     int reservation_qty;              // An int for the Passenger's number of reservations
-    struct Reservation *reservations; // A pointer to the Passenger's (linked) list of reservations
-    struct Passenger *prev;           // A pointer to the previous Passenger node
-    struct Passenger *next;           // A pointer to the next Passenger node
+    struct Reservation *reservations; // A ptr to the Passenger's (linked) list of reservations
+    struct Passenger *prev;           // A ptr to the previous Passenger node
+    struct Passenger *next;           // A ptr to the next Passenger node
 } Passenger;
 
 typedef struct FlightStatus
@@ -1713,7 +1716,7 @@ void view_flights(Flight *head, int mode)
         printf(B_CYAN "-- View Flights > Specific -----------\n\n" RESET);
 
         // Print flights (in linear form)
-        flights_exist = view_flights_linear(head, 3);
+        flights_exist = view_flights_linear(head, VIEW_FLIGHTS_LINEAR_ALL);
         if (!flights_exist)
         {
             return;
@@ -1852,7 +1855,7 @@ void delete_flight(Flight **f_head, Passenger *p_head)
     printf(B_CYAN "== Delete Flight ==========================\n\n" RESET);
 
     // Print flights (in linear form)
-    removable_flights_exist = view_flights_linear(*f_head, 2);
+    removable_flights_exist = view_flights_linear(*f_head, VIEW_FLIGHTS_LINEAR_REMOVABLE);
     if (!removable_flights_exist)
     {
         return;
@@ -2065,6 +2068,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     Reservation *reservation_ptr = NULL;
     Reservation *new_reservation = NULL;
     DateTime *d_ptr = NULL, *a_ptr = NULL;
+    FlightStatus status;
     char *passport_number, *flight_id;
     bool available_flights_exists;
 
@@ -2091,7 +2095,7 @@ void book_reservation(Flight *f_head, Passenger *p_head)
     free(passport_number);
 
     // Print flights (in linear form)
-    available_flights_exists = view_flights_linear(f_head, 1);
+    available_flights_exists = view_flights_linear(f_head, VIEW_FLIGHTS_LINEAR_AVAILABLE);
     if (!available_flights_exists)
     {
         return;
@@ -2113,10 +2117,10 @@ void book_reservation(Flight *f_head, Passenger *p_head)
         return;
     }
 
-    // Update the current datetime
-    update_current_datetime();
+    // Retrieve the status of the flight
+    status = retrieve_flight_status(flight);
 
-    if (is_future(current_datetime, flight->departure) <= 0)
+    if (status.flight_departed)
     {
         printf(RED "[Error] That Flight has already departed.\n\n" RESET);
         free(flight_id);
@@ -2315,7 +2319,7 @@ void view_reservations(Passenger *head)
         free(passport_number);
         return;
     }
-    if (p_ptr->reservation_qty == 0)
+    if (p_ptr->reservations == NULL)
     {
         printf(RED "[Error] That passenger has no reservations.\n\n" RESET);
         free(passport_number);
