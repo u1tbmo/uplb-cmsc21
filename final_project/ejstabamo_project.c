@@ -1873,6 +1873,7 @@ void delete_flight(Flight **f_head, Passenger *p_head)
         free(flight_id);
         return;
     }
+    free(flight_id);
 
     // Retrieve the status of the flight
     status = retrieve_flight_status(f_ptr);
@@ -1882,7 +1883,6 @@ void delete_flight(Flight **f_head, Passenger *p_head)
         printf(RED "[Error] Passengers have already booked this Flight.\n\n" RESET);
         return;
     }
-    free(flight_id);
 
     // Confirm deletion of Flight
     if (confirm_delete())
