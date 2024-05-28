@@ -62,6 +62,11 @@
 - [x] Integers cannot be negative
 - [x] Dates must be valid
 
+### Memory
+
+- [x] Free all memory if functions like `malloc()` or `realloc()` fail.
+  - [x] Immediately exit with `EXIT_FAILURE` if the program cannot run anymore due to lack of memory.
+
 ## Other Program Additions
 
 ### Quality of Life
@@ -85,8 +90,3 @@
 - [x] Compute for the Arrival DateTime instead of asking for it from the user.
   - [x] Replace asking for an arrival datetime with asking for a flight duration in Add and Edit.
 - [x] Cleaner Linear View Functions
-
-### Memory
-
-- [x] Free all memory if functions like `malloc()` or `realloc()` fail.
-  - [x] Immediately exit with `EXIT_FAILURE` if the program cannot run anymore due to lack of memory.
