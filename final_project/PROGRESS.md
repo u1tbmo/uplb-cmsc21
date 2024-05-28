@@ -15,6 +15,7 @@
 ### Save Load Functionality
 
 - [x] Loads from Files
+  - [x] Creates the files if they do not exist.
 - [x] Saves to Files
 
 ### Main Program Functionality
