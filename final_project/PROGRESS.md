@@ -86,4 +86,5 @@
 
 ### Memory
 
-- [x] Free all memory when memory exits with `EXIT_FAILURE` if functions like `malloc()` or `realloc()` fail.
+- [x] Free all memory if functions like `malloc()` or `realloc()` fail.
+  - [x] Immediately exit with `EXIT_FAILURE` if the program cannot run anymore due to lack of memory.
