@@ -2355,79 +2355,118 @@ bool view_flights_linear(Flight *head, int mode)
 {
     // Variables
     int count = 0;
+    int max_origin_length = 0, max_destination_length = 0;
+    int max_departure_month_length = 0, max_arrival_month_length = 0;
     Flight *ptr = head;
     FlightStatus status;
 
+    while (ptr != NULL)
+    {
+        int origin_length = strlen(ptr->origin);
+        int destination_length = strlen(ptr->origin);
+        int departure_month_length = strlen(ptr->departure.date.month);
+        int arrival_month_length = strlen(ptr->arrival.date.month);
+
+        if (max_origin_length < origin_length)
+        {
+            max_origin_length = origin_length;
+        }
+        if (max_destination_length < destination_length)
+        {
+            max_destination_length = destination_length;
+        }
+        if (max_departure_month_length < departure_month_length)
+        {
+            max_departure_month_length = departure_month_length;
+        }
+        if (max_arrival_month_length < arrival_month_length)
+        {
+            max_arrival_month_length = arrival_month_length;
+        }
+
+        ptr = ptr->next;
+    }
+
     switch (mode)
     {
-    case 1: // Mode 1: Available Flights (for Booking)
+    case 1:
         printf(B_CYAN "-- Available Flights -----------------\n\n" RESET);
-        while (ptr != NULL)
+        break;
+    case 2:
+        printf(B_CYAN "-- Empty/Removable Flights -----------\n\n" RESET);
+        break;
+    case 3:
+        printf(B_CYAN "-- All Flights -----------------------\n\n" RESET);
+        break;
+    }
+
+    ptr = head;
+
+    while (ptr != NULL)
+    {
+        bool print_flight = false;
+
+        switch (mode)
         {
+        case 1: // Mode 1: Available Flights (for Booking)
+
             if (ptr->passenger_qty < ptr->passenger_max)
             {
-                printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
-                       ptr->flight_id, ptr->origin, ptr->destination,
-                       ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
-                       ptr->departure.time.hours, ptr->departure.time.minutes,
-                       ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
-                       ptr->arrival.time.hours, ptr->arrival.time.minutes);
-                count++;
+                print_flight = true;
             }
-            ptr = ptr->next;
-        }
-        if (count == 0)
-        {
-            printf(BLUE "[Info] No flights are available.\n\n" RESET);
-            return false;
-        }
-        printf("\n");
-        break;
-    case 2: // Mode 2: Empty/Removable Flights (for Deleting)
-        printf(B_CYAN "-- Empty/Removable Flights -----------\n\n" RESET);
-        while (ptr != NULL)
-        {
+
+            break;
+        case 2: // Mode 2: Empty/Removable Flights (for Deleting)
+
             // Get the current status of the flight
             status = retrieve_flight_status(ptr);
 
             // The flight is removable if there are no passengers or the flight has already arrived.
             if (ptr->passenger_qty == 0 || status.flight_arrived)
             {
-                printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
-                       ptr->flight_id, ptr->origin, ptr->destination,
-                       ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
-                       ptr->departure.time.hours, ptr->departure.time.minutes,
-                       ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
-                       ptr->arrival.time.hours, ptr->arrival.time.minutes);
-                count++;
+                print_flight = true;
             }
-            ptr = ptr->next;
+            break;
+        case 3: // Mode 3: All Flights (for Viewing)
+            print_flight = true;
+            break;
+        default:
+            break;
         }
-        if (count == 0)
-        {
-            printf(BLUE "[Info] No flights are empty/removable.\n\n" RESET);
-            return false;
-        }
-        printf("\n");
-        break;
-    case 3: // Mode 3: All Flights (for Viewing)
-        printf(B_CYAN "-- All Flights -----------------------\n\n" RESET);
-        while (ptr != NULL)
-        {
-            printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
-                   ptr->flight_id, ptr->origin, ptr->destination,
-                   ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
-                   ptr->departure.time.hours, ptr->departure.time.minutes,
-                   ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
-                   ptr->arrival.time.hours, ptr->arrival.time.minutes);
 
-            ptr = ptr->next;
+        if (print_flight)
+        {
+            printf("%6s | %-*s to %-*s | %02d %-*s %02d %02d:%02d - %02d %-*s %02d %02d:%02d\n",
+                   ptr->flight_id, max_origin_length, ptr->origin, max_destination_length, ptr->destination,
+                   ptr->departure.date.day, max_departure_month_length, ptr->departure.date.month, ptr->departure.date.year,
+                   ptr->departure.time.hours, ptr->departure.time.minutes,
+                   ptr->arrival.date.day, max_arrival_month_length, ptr->arrival.date.month, ptr->arrival.date.year,
+                   ptr->arrival.time.hours, ptr->arrival.time.minutes);
+            count++;
         }
-        printf("\n");
-        break;
-    default:
-        break;
+        ptr = ptr->next;
     }
+
+    if (count == 0)
+    {
+        switch (mode)
+        {
+        case 1:
+            printf(BLUE "[Info] No flights are available.\n\n" RESET);
+            break;
+        case 2:
+            printf(BLUE "[Info] No flights are empty/removable.\n\n" RESET);
+            break;
+        case 3:
+            printf(BLUE "[Info] No flights are found.\n\n" RESET);
+            break;
+        default:
+            break;
+        }
+        return false;
+    }
+
+    printf("\n");
     return true;
 }
 
@@ -2435,16 +2474,46 @@ void view_passengers_linear(Passenger *head)
 {
     // Variable
     Passenger *ptr = head;
+    int max_name_length = 0;
+    int max_reservation_qty_length = 0, max_miles_length = 0;
+
+    while (ptr != NULL)
+    {
+        int first_name_length = strlen(ptr->first_name);
+        int last_name_length = strlen(ptr->last_name);
+        int reservation_qty_length = snprintf(NULL, 0, "%d", ptr->reservation_qty);
+        int miles_length = snprintf(NULL, 0, "%d", ptr->miles);
+
+        if (max_name_length < first_name_length + last_name_length)
+        {
+            max_name_length = first_name_length + last_name_length;
+        }
+        if (max_reservation_qty_length < reservation_qty_length)
+        {
+            max_reservation_qty_length = reservation_qty_length;
+        }
+        if (max_miles_length < miles_length)
+        {
+            max_miles_length = miles_length;
+        }
+        ptr = ptr->next;
+    }
 
     printf(B_CYAN "-- Passengers ------------------------\n\n" RESET);
+
+    ptr = head;
 
     // Traverse the linked list and print each Passenger
     while (ptr != NULL)
     {
-        printf("%9s | %s, %s | %d flights reserved | %d miles\n",
-               ptr->passport_number, ptr->last_name,
-               ptr->first_name, ptr->reservation_qty,
-               ptr->miles);
+        char *full_name = (char *)malloc(sizeof(char) * max_name_length + 3);
+        snprintf(full_name, max_name_length + 3, "%s, %s", ptr->last_name, ptr->first_name);
+        printf("%9s | %-*s | %*d flights reserved | %*d miles\n",
+               ptr->passport_number,
+               max_name_length + 2, full_name,
+               max_reservation_qty_length, ptr->reservation_qty,
+               max_miles_length, ptr->miles);
+        free(full_name);
         ptr = ptr->next;
     }
     printf("\n");
@@ -2453,21 +2522,55 @@ void view_passengers_linear(Passenger *head)
 void view_reservations_linear(Reservation *head)
 {
     // Variable
-    Reservation *ptr = head;
-    Flight *f_ptr = NULL; // Pointer to the Reservation's Flight
+    int max_origin_length = 0, max_destination_length = 0;
+    int max_departure_month_length = 0, max_arrival_month_length = 0;
+    Reservation *r_ptr = head;
+    Flight *f_ptr = NULL;
+
+    while (r_ptr != NULL)
+    {
+        f_ptr = r_ptr->flight;
+
+        int origin_length = strlen(f_ptr->origin);
+        int destination_length = strlen(f_ptr->origin);
+        int departure_month_length = strlen(f_ptr->departure.date.month);
+        int arrival_month_length = strlen(f_ptr->arrival.date.month);
+
+        if (max_origin_length < origin_length)
+        {
+            max_origin_length = origin_length;
+        }
+        if (max_destination_length < destination_length)
+        {
+            max_destination_length = destination_length;
+        }
+        if (max_departure_month_length < departure_month_length)
+        {
+            max_departure_month_length = departure_month_length;
+        }
+        if (max_arrival_month_length < arrival_month_length)
+        {
+            max_arrival_month_length = arrival_month_length;
+        }
+
+        r_ptr = r_ptr->next;
+    }
+
+    r_ptr = head;
+    f_ptr = NULL;
 
     printf(B_CYAN "-- Reservations ----------------------\n\n" RESET);
     // Traverse the linked list and print each Reservation
-    while (ptr != NULL)
+    while (r_ptr != NULL)
     {
-        f_ptr = ptr->flight;
-        printf("%6s | %s to %s | %d %s %d %02d:%02d - %d %s %d %02d:%02d\n",
-               f_ptr->flight_id, f_ptr->origin, f_ptr->destination,
-               f_ptr->departure.date.day, f_ptr->departure.date.month, f_ptr->departure.date.year,
+        f_ptr = r_ptr->flight;
+        printf("%6s | %-*s to %-*s | %02d %-*s %02d %02d:%02d - %02d %-*s %02d %02d:%02d\n",
+               f_ptr->flight_id, max_origin_length, f_ptr->origin, max_destination_length, f_ptr->destination,
+               f_ptr->departure.date.day, max_departure_month_length, f_ptr->departure.date.month, f_ptr->departure.date.year,
                f_ptr->departure.time.hours, f_ptr->departure.time.minutes,
-               f_ptr->arrival.date.day, f_ptr->arrival.date.month, f_ptr->arrival.date.year,
+               f_ptr->arrival.date.day, max_arrival_month_length, f_ptr->arrival.date.month, f_ptr->arrival.date.year,
                f_ptr->arrival.time.hours, f_ptr->arrival.time.minutes);
-        ptr = ptr->next;
+        r_ptr = r_ptr->next;
     }
     printf("\n");
 }
