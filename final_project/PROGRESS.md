@@ -62,6 +62,8 @@
 - [x] Integers cannot be negative
 - [x] Dates must be valid
 
+## Other Program Additions
+
 ### Quality of Life
 
 - [x] Capitalize in full on input
