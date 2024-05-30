@@ -1025,6 +1025,9 @@ DateTime get_departure_datetime(char *prompt)
         // Ask for Time (Hours, Minutes)
         new_time = get_time(NULL, false);
 
+        // Reupdate the current datetime
+        update_current_datetime();
+
         // Check if the DateTime is in the future
         datetime_is_future = is_future(current_datetime, (DateTime){.date = new_date, .time = new_time});
 
