@@ -204,11 +204,13 @@ void book_reservation(Flight *f_head, Passenger *p_head);   // Books a Flight re
 void remove_reservation(Flight *f_head, Passenger *p_head); // Removes a Flight reservation from a passenger
 void view_reservations(Passenger *p_head);                  // Views all reservations of a passenger
 
-/* Linear View Functions */
+/* Linear View / Print Functions */
 
 bool view_flights_linear(Flight *head, int mode); // Views flights in the database (linear format), returns false if no flights can be printed
 void view_passengers_linear(Passenger *head);     // Views passengers in the database (linear format)
 void view_reservations_linear(Reservation *head); // Views reservations for a passenger (linear format)
+void print_flight(Flight *flight);                // Prints all details of a Flight
+void print_passenger(Passenger *passenger);       // Prints all details of a Passenger
 
 /* File Functions */
 
@@ -1616,6 +1618,9 @@ void edit_flight(Flight **head)
         return;
     }
 
+    printf(B_CYAN "\n-- Flight Details --------------------\n\n" RESET);
+    print_flight(f_ptr);
+
     // New Departure DateTime
     f_ptr->departure = get_departure_datetime(B_CYAN "-- Departure -------------------------" RESET);
 
@@ -1666,7 +1671,7 @@ void view_flights(Flight *head, int mode)
     int count = 0;
     Flight *ptr = head;
     char *flight_id;
-    bool flights_exist, print_flight;
+    bool flights_exist, should_print;
     FlightStatus status;
 
     switch (mode)
@@ -1698,39 +1703,10 @@ void view_flights(Flight *head, int mode)
         }
         free(flight_id);
 
-        // Retrieve the Flight Status
-        status = retrieve_flight_status(ptr);
-
-        printf(YELLOW "Flight ID: %s\n" RESET, ptr->flight_id);
-        printf(YELLOW "Flight:    %s to %s\n" RESET, ptr->origin, ptr->destination);
-
-        if (status.flight_departed && !status.flight_arrived)
-        {
-            printf(BLUE "- Status:    Ongoing\n" RESET);
-        }
-        else if (status.flight_arrived)
-        {
-            printf(GREEN "- Status:    Arrived\n" RESET);
-        }
-        else if (ptr->passenger_qty == ptr->passenger_max)
-        {
-            printf(RED "- Status:    Fully-booked\n" RESET);
-        }
-        else
-        {
-            printf(GREEN "- Status:    Available\n" RESET);
-        }
-
-        printf("- Departure: %d %s %d - %02d:%02d\n",
-               ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
-               ptr->departure.time.hours, ptr->departure.time.minutes);
-        printf("- Arrival:   %d %s %d - %02d:%02d\n",
-               ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
-               ptr->arrival.time.hours, ptr->arrival.time.minutes);
-        printf("Passengers:  %d\n", ptr->passenger_qty);
-        printf("Max Seats:   %d\n", ptr->passenger_max);
-        printf("Bonus Miles: %d\n", ptr->bonus_miles);
+        // Print the flight
+        print_flight(ptr);
         printf("\n");
+
         return;
     case 2: // Mode 2: View Available Flights
         printf(B_CYAN "-- View Flights > Available ----------\n\n" RESET);
@@ -1748,7 +1724,7 @@ void view_flights(Flight *head, int mode)
 
     while (ptr != NULL)
     {
-        print_flight = false;
+        should_print = false;
 
         // Retrieve the Flight Status
         status = retrieve_flight_status(ptr);
@@ -1756,47 +1732,19 @@ void view_flights(Flight *head, int mode)
         switch (mode)
         {
         case 2: // Mode 2: View Available Flights
-            print_flight = !status.flight_departed && !status.flight_arrived && ptr->passenger_qty < ptr->passenger_max;
+            should_print = !status.flight_departed && !status.flight_arrived && ptr->passenger_qty < ptr->passenger_max;
             break;
         case 3: // Mode 3: View Full Flights
-            print_flight = ptr->passenger_qty == ptr->passenger_max;
+            should_print = ptr->passenger_qty == ptr->passenger_max;
             break;
         case 4: // Mode 4: View All Flights
-            print_flight = true;
+            should_print = true;
             break;
         }
 
-        if (print_flight)
+        if (should_print)
         {
-            printf(YELLOW "Flight ID: %s\n" RESET, ptr->flight_id);
-            printf(YELLOW "Flight:    %s to %s\n" RESET, ptr->origin, ptr->destination);
-
-            if (status.flight_departed && !status.flight_arrived)
-            {
-                printf(BLUE "- Status:    Ongoing\n" RESET);
-            }
-            else if (status.flight_arrived)
-            {
-                printf(GREEN "- Status:    Arrived\n" RESET);
-            }
-            else if (ptr->passenger_qty == ptr->passenger_max)
-            {
-                printf(RED "- Status:    Fully-booked\n" RESET);
-            }
-            else
-            {
-                printf(GREEN "- Status:    Available\n" RESET);
-            }
-
-            printf("- Departure: %d %s %d - %02d:%02d\n",
-                   ptr->departure.date.day, ptr->departure.date.month, ptr->departure.date.year,
-                   ptr->departure.time.hours, ptr->departure.time.minutes);
-            printf("- Arrival:   %d %s %d - %02d:%02d\n",
-                   ptr->arrival.date.day, ptr->arrival.date.month, ptr->arrival.date.year,
-                   ptr->arrival.time.hours, ptr->arrival.time.minutes);
-            printf("Passengers:  %d\n", ptr->passenger_qty);
-            printf("Max Seats:   %d\n", ptr->passenger_max);
-            printf("Bonus Miles: %d\n", ptr->bonus_miles);
+            print_flight(ptr);
             printf("\n");
             count++;
         }
@@ -2027,6 +1975,10 @@ void edit_passenger(Passenger *head)
         return;
     }
     free(passport_number);
+
+    printf(B_CYAN "\n-- Passenger Details -----------------\n\n" RESET);
+    print_passenger(p_ptr);
+    printf(B_CYAN "\n--------------------------------------\n\n" RESET);
 
     // New Last Name
     do
@@ -2369,39 +2321,7 @@ void view_reservations(Passenger *head)
     // Traverse and print each reservation
     while (r_ptr != NULL)
     {
-        f_ptr = r_ptr->flight;
-
-        status = retrieve_flight_status(f_ptr);
-
-        printf(YELLOW "Flight ID: %s\n" RESET, f_ptr->flight_id);
-        printf(YELLOW "Flight:    %s to %s\n" RESET, f_ptr->origin, f_ptr->destination);
-
-        if (status.flight_departed && !status.flight_arrived)
-        {
-            printf(BLUE "- Status:    Ongoing\n" RESET);
-        }
-        else if (status.flight_arrived)
-        {
-            printf(GREEN "- Status:    Arrived\n" RESET);
-        }
-        else if (f_ptr->passenger_qty == f_ptr->passenger_max)
-        {
-            printf(RED "- Status:    Fully-booked\n" RESET);
-        }
-        else
-        {
-            printf(GREEN "- Status:    Available\n" RESET);
-        }
-
-        printf("- Departure: %d %s %d - %02d:%02d\n",
-               f_ptr->departure.date.day, f_ptr->departure.date.month, f_ptr->departure.date.year,
-               f_ptr->departure.time.hours, f_ptr->departure.time.minutes);
-        printf("- Arrival:   %d %s %d - %02d:%02d\n",
-               f_ptr->arrival.date.day, f_ptr->arrival.date.month, f_ptr->arrival.date.year,
-               f_ptr->arrival.time.hours, f_ptr->arrival.time.minutes);
-        printf("Passengers:  %d\n", f_ptr->passenger_qty);
-        printf("Max Seats:   %d\n", f_ptr->passenger_max);
-        printf("Bonus Miles: %d\n", f_ptr->bonus_miles);
+        print_flight(r_ptr->flight);
         printf("\n");
         r_ptr = r_ptr->next;
     }
@@ -2489,14 +2409,14 @@ bool view_flights_linear(Flight *head, int mode)
     ptr = head;
     while (ptr != NULL)
     {
-        bool print_flight = false;
+        bool should_print = false;
         switch (mode)
         {
         case 1: // Mode 1: Available Flights (for Booking)
             status = retrieve_flight_status(ptr);
             if (ptr->passenger_qty < ptr->passenger_max && !status.flight_departed)
             {
-                print_flight = true;
+                should_print = true;
             }
             break;
         case 2: // Mode 2: Empty/Removable Flights (for Deleting)
@@ -2507,16 +2427,16 @@ bool view_flights_linear(Flight *head, int mode)
             // The flight is removable if there are no passengers or the flight has already arrived.
             if (ptr->passenger_qty == 0 || status.flight_arrived)
             {
-                print_flight = true;
+                should_print = true;
             }
             break;
         case 3: // Mode 3: All Flights (for Viewing)
-            print_flight = true;
+            should_print = true;
             break;
         }
 
         // Print the flight if it fits the criteria
-        if (print_flight)
+        if (should_print)
         {
             printf("%6s | %-*s to %-*s | %02d %-*s %02d %02d:%02d - %02d %-*s %02d %02d:%02d\n",
                    ptr->flight_id, max_origin_length, ptr->origin, max_destination_length, ptr->destination,
@@ -2655,6 +2575,61 @@ void view_reservations_linear(Reservation *head)
         r_ptr = r_ptr->next;
     }
     printf("\n");
+}
+
+void print_flight(Flight *flight)
+{
+    // Retrieve the Flight Status
+    FlightStatus status = retrieve_flight_status(flight);
+
+    printf(YELLOW "Flight ID: %s\n" RESET, flight->flight_id);
+    printf("Flight:    %s to %s\n", flight->origin, flight->destination);
+
+    if (status.flight_departed && !status.flight_arrived)
+    {
+        printf(BLUE "- Status:    Ongoing\n" RESET);
+    }
+    else if (status.flight_arrived)
+    {
+        printf(GREEN "- Status:    Arrived\n" RESET);
+    }
+    else if (flight->passenger_qty == flight->passenger_max)
+    {
+        printf(RED "- Status:    Fully-booked\n" RESET);
+    }
+    else
+    {
+        printf(GREEN "- Status:    Available\n" RESET);
+    }
+
+    printf("- Departure: %d %s %d - %02d:%02d\n",
+           flight->departure.date.day, flight->departure.date.month, flight->departure.date.year,
+           flight->departure.time.hours, flight->departure.time.minutes);
+    printf("- Arrival:   %d %s %d - %02d:%02d\n",
+           flight->arrival.date.day, flight->arrival.date.month, flight->arrival.date.year,
+           flight->arrival.time.hours, flight->arrival.time.minutes);
+    printf("Passengers:  %d\n", flight->passenger_qty);
+    printf("Max Seats:   %d\n", flight->passenger_max);
+    printf("Bonus Miles: %d\n", flight->bonus_miles);
+}
+
+void print_passenger(Passenger *passenger)
+{
+    Reservation *r_ptr = passenger->reservations;
+    int count = 0;
+
+    printf(YELLOW "Passport Number: %s\n" RESET, passenger->passport_number);
+    printf("Name:            %s, %s\n" RESET, passenger->last_name, passenger->first_name);
+    printf("Birth Date:      %02d %s %d\n" RESET, passenger->birth_date.day, passenger->birth_date.month, passenger->birth_date.year);
+    printf("Reservations:    %d\n" RESET, passenger->reservation_qty);
+    printf("- ");
+    while (r_ptr != NULL)
+    {
+        (r_ptr->next == NULL || (count % 5 == 0 && count != 0)) ? printf("%s\n", r_ptr->flight->flight_id) : printf("%s, ", r_ptr->flight->flight_id);
+        count++;
+        r_ptr = r_ptr->next;
+    }
+    printf("Miles:           %d\n" RESET, passenger->miles);
 }
 
 void load_flights(Flight **f_head, FILE *fp)
