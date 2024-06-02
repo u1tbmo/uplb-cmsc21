@@ -44,7 +44,9 @@
 - [x] Add Passenger
   - [x] Disallow invalid passport numbers
   - [x] Disallow duplicate passports
+  - [x] Disallow age older than 130
 - [x] Edit Passenger
+  - [x] Disallow age older than 130
 - [x] Book Reservation
   - [x] Terminates if there no available flights exist.
   - [x] Disallow booking a departed flight.
@@ -67,6 +69,11 @@
 - [x] Free all memory if functions like `malloc()` or `realloc()` fail.
   - [x] Immediately exit with `EXIT_FAILURE` if the program cannot run anymore due to lack of memory.
 
+### Order of Data
+
+- [x] Flights are sorted by departure, source, then destination
+- [x] Passengers are sorted in alphabetical order
+
 ## Other Program Additions
 
 ### Quality of Life
@@ -78,11 +85,13 @@
   - [x] Names
   - [x] Months
   - [x] Locations
-
-### Order of Data
-
-- [x] Flights are sorted by departure, source, then destination
-- [x] Passengers are sorted in alphabetical order
+- [x] Print the status of the flight whenever they are viewed
+  - [x] Ongoing
+  - [x] Arrived
+  - [x] Available
+  - [x] Fully Booked
+- [x] Show current details of the flight when editing
+- [x] Show current details of the passenger when editing
 
 ### Possible Improvements
 
