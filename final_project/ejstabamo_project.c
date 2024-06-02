@@ -28,6 +28,7 @@
 #define MONTH_STR_SIZE 10                   // the maximum array size of a month string (September is the longest string)
 #define INITIAL_BUFFER_SIZE 16              // the initial number of bytes allocated for a string
 #define MIN_PASSENGERS_PER_FLIGHT 1         // the minimum number of passengers allowed for a flight
+#define MAX_AGE 130                         // the maximum age allowed for a passenger
 #define FLIGHTS_FILE "flights.txt"          // the string representing the file where flights are saved
 #define PASSENGERS_FILE "passengers.txt"    // the string representing the file where passengers are saved
 #define MIN_FLIGHT_DURATION_IN_MINUTES 1    // the minimum flight duration allowed for a flight
@@ -143,6 +144,7 @@ bool is_conflicting(DateTime departure1, DateTime arrival1, // Checks if a DateT
                     DateTime departure2, DateTime arrival2);
 bool is_leap(int year);                         // Checks if a year is a leap year
 bool is_future(DateTime date1, DateTime date2); // Checks if a DateTime is in the future (from another DateTime)
+bool is_valid_birthdate(Date birth_date);       // Checks if a birth date is valid
 
 /* Input Functions */
 
@@ -383,7 +385,6 @@ int main()
             printf(RED "Oops! Please enter a valid choice.\n\n" RESET);
             break;
         }
-
     } while (choice != 0);
 
     // Free allocated memory
@@ -801,6 +802,12 @@ bool is_future(DateTime date1, DateTime date2)
     return datetime_to_minutes(date2) > datetime_to_minutes(date1);
 }
 
+bool is_valid_birthdate(Date birth_date)
+{
+    // Check if the age of the person is less than or equal to MAX_AGE
+    return current_datetime.date.year - birth_date.year <= MAX_AGE;
+}
+
 char *get_string(char *prompt, FILE *stream)
 {
     // Variables
@@ -886,7 +893,6 @@ int get_int(char *prompt)
         {
             printf(RED "Oops! Please enter a valid positive integer.\n" RESET);
         }
-
     } while (*endptr != '\0' || input[0] == '\n' || endptr == input || number < 0);
     free(input); // Free the string
 
@@ -924,7 +930,6 @@ Date get_date(char *prompt)
             strncpy(new_date.month, input, MONTH_STR_SIZE);
         }
         free(input);
-
     } while (!month_is_valid);
 
     // Ask for a day
@@ -936,7 +941,6 @@ Date get_date(char *prompt)
         {
             printf(RED "Oops! Invalid day. Please type a valid day.\n" RESET);
         }
-
     } while (!day_is_valid);
 
     return new_date;
@@ -975,7 +979,6 @@ Time get_time(char *prompt, bool is_duration)
             {
                 printf(RED "Oops! Minutes are not in range (0-59).\n" RESET);
             }
-
         } while (new_time.minutes < 0 || new_time.minutes > 59);
 
         // If we are getting a duration
@@ -991,7 +994,6 @@ Time get_time(char *prompt, bool is_duration)
                 printf(RED "Oops! Duration is not in range (1 minute to 19 hours).\n" RESET);
             }
         }
-
     } while ((is_duration && !is_valid_duration));
 
     return new_time;
@@ -1043,7 +1045,6 @@ DateTime get_departure_datetime(char *prompt)
                    new_date.day, new_date.month, new_date.year,
                    new_time.hours, new_time.minutes);
         }
-
     } while (!datetime_is_future);
 
     // Set the DateTime components using the acquired Date and Time
@@ -1557,7 +1558,6 @@ void add_flight(Flight **head)
         {
             printf(RED "Oops! Origin cannot be empty.\n" RESET);
         }
-
     } while (!string_is_valid);
 
     // Ask for Destination
@@ -1579,7 +1579,6 @@ void add_flight(Flight **head)
         {
             printf(RED "Oops! Destination cannot be the same as the origin.\n" RESET);
         }
-
     } while (!string_is_valid || dest_is_origin);
 
     // Ask for Departure DateTime
@@ -1602,7 +1601,6 @@ void add_flight(Flight **head)
         {
             printf(RED "Oops! The maximum number of passengers must be at least %d.\n" RESET, MIN_PASSENGERS_PER_FLIGHT);
         }
-
     } while (new_flight->passenger_max < MIN_PASSENGERS_PER_FLIGHT);
 
     // Ask for Bonus Miles
@@ -1613,7 +1611,6 @@ void add_flight(Flight **head)
         {
             printf(RED "Oops! The bonus miles must be at least 0.\n" RESET);
         }
-
     } while (new_flight->bonus_miles < 0);
 
     // Insert the Flight to the linked list
@@ -1686,7 +1683,6 @@ void edit_flight(Flight **head)
         {
             printf(RED "Oops! You cannot decrease maximum passengers below number of reserved passengers.\n" RESET);
         }
-
     } while (f_ptr->passenger_max < MIN_PASSENGERS_PER_FLIGHT || f_ptr->passenger_max < f_ptr->passenger_qty);
 
     reinsert_flight_node(&(*head), f_ptr);
@@ -1930,7 +1926,7 @@ void add_passenger(Passenger **head)
     char *last_name = NULL;
     Date birth_date;
     char *passport_number = NULL;
-    bool passport_is_valid = false, string_is_valid = false;
+    bool passport_is_valid, string_is_valid, birthdate_is_valid;
 
     printf(B_CYAN "== Add Passenger ==========================\n\n" RESET);
 
@@ -1948,7 +1944,6 @@ void add_passenger(Passenger **head)
         {
             printf(RED "Oops! First name cannot be empty.\n" RESET);
         }
-
     } while (!string_is_valid);
     do
     {
@@ -1963,12 +1958,19 @@ void add_passenger(Passenger **head)
         {
             printf(RED "Oops! Last name cannot be empty.\n" RESET);
         }
-
     } while (!string_is_valid);
 
     // Ask for Birth Date
-    birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
-    printf(B_CYAN "\n--------------------------------------\n\n" RESET);
+    do
+    {
+        birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
+        printf(B_CYAN "\n--------------------------------------\n\n" RESET);
+        birthdate_is_valid = is_valid_birthdate(birth_date);
+        if (!birthdate_is_valid)
+        {
+            printf(RED "\nOops! Please enter a valid birth date. The maximum age is %d.\n" RESET, MAX_AGE);
+        }
+    } while (!birthdate_is_valid);
 
     // Ask for Passport Number and validate
     do
@@ -1991,7 +1993,6 @@ void add_passenger(Passenger **head)
             free(passport_number);
             return;
         }
-
     } while (!passport_is_valid);
 
     // Create Passenger node and initialize fields
@@ -2009,7 +2010,6 @@ void add_passenger(Passenger **head)
         {
             printf(RED "Oops! The number of miles must be at least 0.\n" RESET);
         }
-
     } while (new_passenger->miles < 0);
 
     // Insert the Passenger to the linked list
@@ -2022,7 +2022,7 @@ void add_passenger(Passenger **head)
 void edit_passenger(Passenger *head)
 {
     // Variable
-    bool string_is_valid;
+    bool string_is_valid, birthdate_is_valid;
 
     printf(B_CYAN "== Edit Passenger =========================\n\n" RESET);
 
@@ -2058,12 +2058,23 @@ void edit_passenger(Passenger *head)
         }
         p_ptr->last_name = capitalize_string(get_string("Last Name: ", stdin));
         string_is_valid = is_valid_nonempty_string(p_ptr->last_name);
-
+        if (!string_is_valid)
+        {
+            printf(RED "Oops! Last name cannot be empty.\n\n" RESET);
+        }
     } while (!string_is_valid);
 
     // New Birth Date
-    p_ptr->birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
-    printf(B_CYAN "\n--------------------------------------\n" RESET);
+    do
+    {
+        p_ptr->birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
+        printf(B_CYAN "\n--------------------------------------\n" RESET);
+        birthdate_is_valid = is_valid_birthdate(p_ptr->birth_date);
+        if (!birthdate_is_valid)
+        {
+            printf(RED "\nOops! Please enter a valid birth date. The maximum age is %d.\n" RESET, MAX_AGE);
+        }
+    } while (!birthdate_is_valid);
 
     printf(GREEN "\nSuccess: Edited Passenger %s.\n\n" RESET, p_ptr->first_name);
 }
