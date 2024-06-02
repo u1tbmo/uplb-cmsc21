@@ -232,17 +232,11 @@ int main()
     // Load Flights and Passengers from files
     load(&flights, &passengers);
 
-    // Set the current date every time user inputs a choice
-    update_current_datetime();
-
     // Main Program Loop
     do
     {
         // Print the menu and ask the user for a choice
         choice = main_menu();
-
-        // Update the current_datetime
-        update_current_datetime();
 
         printf("\n");
 
@@ -398,6 +392,9 @@ int main_menu()
 {
     // Variables
     int choice;
+
+    // Set the current date when the main menu starts
+    update_current_datetime();
 
     // Print the current_datetime
     printf(B_CYAN "============== Date and Time ==============\n" RESET);
@@ -1963,6 +1960,9 @@ void add_passenger(Passenger **head)
     // Ask for Birth Date
     do
     {
+        // Update the current datetime before asking for the birth date
+        update_current_datetime();
+
         birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
         printf(B_CYAN "\n--------------------------------------\n\n" RESET);
         birthdate_is_valid = is_valid_birthdate(birth_date);
@@ -2067,6 +2067,9 @@ void edit_passenger(Passenger *head)
     // New Birth Date
     do
     {
+        // Update the current datetime before asking for the birth date
+        update_current_datetime();
+
         p_ptr->birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
         printf(B_CYAN "\n--------------------------------------\n" RESET);
         birthdate_is_valid = is_valid_birthdate(p_ptr->birth_date);
