@@ -20,8 +20,7 @@ exer9/customers.txt
 exer9/events.txt
 exer11/customers.txt
 exer11/events.txt
-final_project/flights.txt
-final_project/passengers.txt
+final_project/*.txt
 
 
 # Created by https://www.toptal.com/developers/gitignore/api/c
