@@ -1888,7 +1888,7 @@ void add_passenger(Passenger **head)
         birthdate_is_valid = is_valid_birthdate(birth_date);
         if (!birthdate_is_valid)
         {
-            printf(RED "\nOops! Please enter a valid birth date. The maximum age is %d.\n" RESET, MAX_AGE);
+            printf(RED "Oops! Please enter a valid birth date. The maximum age is %d.\n" RESET, MAX_AGE);
         }
     } while (!birthdate_is_valid);
 
