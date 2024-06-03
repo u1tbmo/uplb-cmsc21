@@ -853,7 +853,7 @@ Date get_date(char *prompt)
 {
     // Variables
     Date new_date;
-    char *input = NULL, *endptr = NULL;
+    char *input = NULL;
     bool month_is_valid = false, day_is_valid = false;
 
     // Print prompt if there is a prompt
@@ -1588,7 +1588,7 @@ void edit_flight(Flight **head)
     }
 
     // Print flights (in linear form)
-    view_flights_linear(*head, 3);
+    view_flights_linear(*head, VIEW_FLIGHTS_LINEAR_ALL);
 
     // Ask for a Flight ID and validate
     flight_id = toupper_string(get_string("Flight ID: ", stdin));
@@ -2591,7 +2591,7 @@ void print_flight(Flight *flight)
     }
     else if (status.flight_arrived)
     {
-        printf(GREEN "- Status:    Arrived\n" RESET);
+        printf(BLUE "- Status:    Arrived\n" RESET);
     }
     else if (flight->passenger_qty == flight->passenger_max)
     {
@@ -2619,9 +2619,9 @@ void print_passenger(Passenger *passenger)
     int count = 0;
 
     printf(YELLOW "Passport Number: %s\n" RESET, passenger->passport_number);
-    printf("Name:            %s, %s\n" RESET, passenger->last_name, passenger->first_name);
-    printf("Birth Date:      %02d %s %d\n" RESET, passenger->birth_date.day, passenger->birth_date.month, passenger->birth_date.year);
-    printf("Reservations:    %d\n" RESET, passenger->reservation_qty);
+    printf("Name:         %s, %s\n" RESET, passenger->last_name, passenger->first_name);
+    printf("Birth Date:   %02d %s %d\n" RESET, passenger->birth_date.day, passenger->birth_date.month, passenger->birth_date.year);
+    printf("Reservations: %d\n" RESET, passenger->reservation_qty);
     printf("- ");
     while (r_ptr != NULL)
     {
@@ -2629,7 +2629,7 @@ void print_passenger(Passenger *passenger)
         count++;
         r_ptr = r_ptr->next;
     }
-    printf("Miles:           %d\n" RESET, passenger->miles);
+    printf("Miles:        %d\n" RESET, passenger->miles);
 }
 
 void load_flights(Flight **f_head, FILE *fp)
