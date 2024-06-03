@@ -862,10 +862,6 @@ Date get_date(char *prompt)
         printf("\n%s\n\n", prompt);
     }
 
-    // Ask for a year
-
-    new_date.year = get_int("Year:    ");
-
     // Ask for a month
     do
     {
@@ -892,6 +888,9 @@ Date get_date(char *prompt)
             printf(RED "Oops! Invalid day. Please type a valid day.\n" RESET);
         }
     } while (!day_is_valid);
+
+    // Ask for a year
+    new_date.year = get_int("Year:    ");
 
     return new_date;
 }
@@ -941,7 +940,7 @@ Time get_time(char *prompt, bool is_duration)
             }
             else
             {
-                printf(RED "Oops! Duration is not in range (1 minute to 19 hours).\n" RESET);
+                printf(RED "Oops! Duration is not in range (00:01 - 18:50).\n" RESET);
             }
         }
     } while ((is_duration && !is_valid_duration));
@@ -975,7 +974,7 @@ DateTime get_departure_datetime(char *prompt)
         new_date = get_date(NULL);
 
         // Ask for Time (Hours, Minutes)
-        new_time = get_time(NULL, false);
+        new_time = get_time(B_CYAN "-- Departure Time --------------------" RESET, false);
 
         // Reupdate the current datetime
         update_current_datetime();
@@ -1532,7 +1531,7 @@ void add_flight(Flight **head)
     } while (!string_is_valid || dest_is_origin);
 
     // Ask for Departure DateTime
-    new_flight->departure = get_departure_datetime(B_CYAN "-- Departure -------------------------" RESET);
+    new_flight->departure = get_departure_datetime(B_CYAN "-- Departure Date --------------------" RESET);
 
     // Ask for Duration
     duration = get_time(B_CYAN "-- Duration --------------------------" RESET, "duration");
@@ -1622,7 +1621,7 @@ void edit_flight(Flight **head)
     print_flight(f_ptr);
 
     // New Departure DateTime
-    f_ptr->departure = get_departure_datetime(B_CYAN "-- Departure -------------------------" RESET);
+    f_ptr->departure = get_departure_datetime(B_CYAN "-- Departure Date --------------------" RESET);
 
     // New Duration (for a new Arrival DateTime)
     duration = get_time(B_CYAN "-- Duration --------------------------" RESET, "duration");
