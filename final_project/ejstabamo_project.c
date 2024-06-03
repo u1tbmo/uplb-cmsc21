@@ -2587,7 +2587,7 @@ void print_flight(Flight *flight)
 
     if (status.flight_departed && !status.flight_arrived)
     {
-        printf(BLUE "- Status:    Ongoing\n" RESET);
+        printf(RED "- Status:    Ongoing\n" RESET);
     }
     else if (status.flight_arrived)
     {
