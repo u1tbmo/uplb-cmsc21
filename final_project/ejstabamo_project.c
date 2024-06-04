@@ -913,7 +913,7 @@ Time get_time(char *prompt, bool is_duration)
         // Ask for hours
         do
         {
-            new_time.hours = get_int("Hours:   ");
+            new_time.hours = get_int((!is_duration) ? "Hours (00-23):   " : "Hours (00-18):   ");
             if (new_time.hours < 0 || new_time.hours > 23)
             {
                 printf(RED "Oops! Hours are not in range (0-23).\n" RESET);
@@ -923,7 +923,7 @@ Time get_time(char *prompt, bool is_duration)
         // Ask for minutes
         do
         {
-            new_time.minutes = get_int("Minutes: ");
+            new_time.minutes = get_int("Minutes (00-59): ");
             if (new_time.minutes < 0 || new_time.minutes > 59)
             {
                 printf(RED "Oops! Minutes are not in range (0-59).\n" RESET);
@@ -965,8 +965,8 @@ DateTime get_departure_datetime(char *prompt)
         if (prompt != NULL)
         {
             printf("\n%s\n\n", prompt);
-            printf("Current Date and Time: ");
-            printf("%d %s %d %02d:%02d\n",
+            printf("Current: ");
+            printf("%d %s %d %02d:%02d\n\n",
                    current_datetime.date.day, current_datetime.date.month, current_datetime.date.year,
                    current_datetime.time.hours, current_datetime.time.minutes);
         }
@@ -974,7 +974,7 @@ DateTime get_departure_datetime(char *prompt)
         new_date = get_date(NULL);
 
         // Ask for Time (Hours, Minutes)
-        new_time = get_time(B_CYAN "-- Departure Time --------------------" RESET, false);
+        new_time = get_time(B_CYAN "--- Departure Time --------------------" RESET, false);
 
         // Reupdate the current datetime
         update_current_datetime();
@@ -984,13 +984,14 @@ DateTime get_departure_datetime(char *prompt)
 
         if (!datetime_is_future)
         {
+            printf(B_CYAN "\n---------------------------------------\n\n" RESET);
             printf(RED "Oops! Departure must be after current date and time.\n" RESET);
-            printf("Current Date and Time:   ");
-            printf("%d %s %d %02d:%02d\n",
+            printf(BLUE "Current:   ");
+            printf("%d %s %d %02d:%02d\n" RESET,
                    current_datetime.date.day, current_datetime.date.month, current_datetime.date.year,
                    current_datetime.time.hours, current_datetime.time.minutes);
-            printf("Departure Date and Time: ");
-            printf("%d %s %d %02d:%02d\n",
+            printf(RED "Departure: ");
+            printf("%d %s %d %02d:%02d\n" RESET,
                    new_date.day, new_date.month, new_date.year,
                    new_time.hours, new_time.minutes);
         }
@@ -1531,10 +1532,10 @@ void add_flight(Flight **head)
     } while (!string_is_valid || dest_is_origin);
 
     // Ask for Departure DateTime
-    new_flight->departure = get_departure_datetime(B_CYAN "-- Departure Date --------------------" RESET);
+    new_flight->departure = get_departure_datetime(B_CYAN "--- Departure Date --------------------" RESET);
 
     // Ask for Duration
-    duration = get_time(B_CYAN "-- Duration --------------------------" RESET, "duration");
+    duration = get_time(B_CYAN "--- Duration --------------------------" RESET, "duration");
 
     // Compute for the Arrival DateTime
     new_flight->arrival = compute_arrival_datetime(new_flight->departure, duration);
@@ -1542,7 +1543,7 @@ void add_flight(Flight **head)
     // Number of Booked Passengers is already set to 0
 
     // Ask for Max Count of Passengers (Seats)
-    printf(B_CYAN "\n--------------------------------------\n\n" RESET);
+    printf(B_CYAN "\n---------------------------------------\n\n" RESET);
     do
     {
         new_flight->passenger_max = get_int("Max Seats:   ");
@@ -1617,20 +1618,20 @@ void edit_flight(Flight **head)
         return;
     }
 
-    printf(B_CYAN "\n-- Flight Details --------------------\n\n" RESET);
+    printf(B_CYAN "\n--- Flight Details --------------------\n\n" RESET);
     print_flight(f_ptr);
 
     // New Departure DateTime
-    f_ptr->departure = get_departure_datetime(B_CYAN "-- Departure Date --------------------" RESET);
+    f_ptr->departure = get_departure_datetime(B_CYAN "--- Departure Date --------------------" RESET);
 
     // New Duration (for a new Arrival DateTime)
-    duration = get_time(B_CYAN "-- Duration --------------------------" RESET, "duration");
+    duration = get_time(B_CYAN "--- Duration --------------------------" RESET, "duration");
 
     // Compute for the new Arrival DateTime
     f_ptr->arrival = compute_arrival_datetime(f_ptr->departure, duration);
 
     // New Max Passengers (Seats)
-    printf(B_CYAN "\n--------------------------------------\n\n" RESET);
+    printf(B_CYAN "\n---------------------------------------\n\n" RESET);
     do
     {
         f_ptr->passenger_max = get_int("Max Seats: ");
@@ -1676,7 +1677,7 @@ void view_flights(Flight *head, int mode)
     switch (mode)
     {
     case 1: // Mode 1: View Specific Flight
-        printf(B_CYAN "-- View Flights > Specific -----------\n\n" RESET);
+        printf(B_CYAN "--- View Flights > Specific -----------\n\n" RESET);
 
         // Print flights (in linear form)
         flights_exist = view_flights_linear(head, VIEW_FLIGHTS_LINEAR_ALL);
@@ -1708,13 +1709,13 @@ void view_flights(Flight *head, int mode)
 
         return;
     case 2: // Mode 2: View Available Flights
-        printf(B_CYAN "-- View Flights > Available ----------\n\n" RESET);
+        printf(B_CYAN "--- View Flights > Available ----------\n\n" RESET);
         break;
     case 3: // Mode 3: View Full Flights
-        printf(B_CYAN "-- View Flights > Fully-Booked -------\n\n" RESET);
+        printf(B_CYAN "--- View Flights > Fully-Booked -------\n\n" RESET);
         break;
     case 4: // Mode 4: View All Flights
-        printf(B_CYAN "-- View Flights > All ----------------\n\n" RESET);
+        printf(B_CYAN "--- View Flights > All ----------------\n\n" RESET);
         break;
     default:
         printf(RED "Oops! Please enter a valid choice.\n\n" RESET);
@@ -1882,8 +1883,8 @@ void add_passenger(Passenger **head)
         // Update the current datetime before asking for the birth date
         update_current_datetime();
 
-        birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
-        printf(B_CYAN "\n--------------------------------------\n\n" RESET);
+        birth_date = get_date(B_CYAN "--- Date of Birth ---------------------" RESET);
+        printf(B_CYAN "\n---------------------------------------\n\n" RESET);
         birthdate_is_valid = is_valid_birthdate(birth_date);
         if (!birthdate_is_valid)
         {
@@ -1975,9 +1976,9 @@ void edit_passenger(Passenger *head)
     }
     free(passport_number);
 
-    printf(B_CYAN "\n-- Passenger Details -----------------\n\n" RESET);
+    printf(B_CYAN "\n--- Passenger Details -----------------\n\n" RESET);
     print_passenger(p_ptr);
-    printf(B_CYAN "\n--------------------------------------\n\n" RESET);
+    printf(B_CYAN "\n---------------------------------------\n\n" RESET);
 
     // New Last Name
     do
@@ -2000,8 +2001,8 @@ void edit_passenger(Passenger *head)
         // Update the current datetime before asking for the birth date
         update_current_datetime();
 
-        p_ptr->birth_date = get_date(B_CYAN "-- Date of Birth ---------------------" RESET);
-        printf(B_CYAN "\n--------------------------------------\n" RESET);
+        p_ptr->birth_date = get_date(B_CYAN "--- Date of Birth ---------------------" RESET);
+        printf(B_CYAN "\n---------------------------------------\n" RESET);
         birthdate_is_valid = is_valid_birthdate(p_ptr->birth_date);
         if (!birthdate_is_valid)
         {
@@ -2313,7 +2314,7 @@ void view_reservations(Passenger *head)
     }
     free(passport_number);
 
-    printf(B_CYAN "-- Reservations ----------------------\n\n" RESET);
+    printf(B_CYAN "--- Reservations ----------------------\n\n" RESET);
 
     // Start from the head of the passenger's reservation linked list
     r_ptr = p_ptr->reservations;
@@ -2394,13 +2395,13 @@ bool view_flights_linear(Flight *head, int mode)
     switch (mode)
     {
     case 1:
-        printf(B_CYAN "-- Available Flights -----------------\n\n" RESET);
+        printf(B_CYAN "--- Available Flights -----------------\n\n" RESET);
         break;
     case 2:
-        printf(B_CYAN "-- Empty/Removable Flights -----------\n\n" RESET);
+        printf(B_CYAN "--- Empty/Removable Flights -----------\n\n" RESET);
         break;
     case 3:
-        printf(B_CYAN "-- All Flights -----------------------\n\n" RESET);
+        printf(B_CYAN "--- All Flights -----------------------\n\n" RESET);
         break;
     }
 
@@ -2500,7 +2501,7 @@ void view_passengers_linear(Passenger *head)
         ptr = ptr->next;
     }
 
-    printf(B_CYAN "-- Passengers ------------------------\n\n" RESET);
+    printf(B_CYAN "--- Passengers ------------------------\n\n" RESET);
 
     // Second Pass: Print the passengers
     ptr = head;
@@ -2557,7 +2558,7 @@ void view_reservations_linear(Reservation *head)
         r_ptr = r_ptr->next;
     }
 
-    printf(B_CYAN "-- Reservations ----------------------\n\n" RESET);
+    printf(B_CYAN "--- Reservations ----------------------\n\n" RESET);
 
     // Second Pass: Print the reservations
     r_ptr = head;
